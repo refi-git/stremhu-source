@@ -1,0 +1,9 @@
+import * as z from 'zod'
+
+import { LanguageEnum, ResolutionEnum } from '@/client/app-client'
+
+export const userPreferencesSchema = z.object({
+  torrentResolutions: z.array(z.enum(ResolutionEnum)),
+  torrentLanguages: z.array(z.enum(LanguageEnum)),
+  torrentSeed: z.number().nullable(),
+})

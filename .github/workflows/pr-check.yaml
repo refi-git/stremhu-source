@@ -1,0 +1,21 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "client/**"
+      - "server/**"
+
+jobs:
+  server:
+    name: Server
+    uses: ./.github/workflows/reusable-test-and-build.yaml
+    with:
+      working-directory: ./server
+
+  client:
+    name: Client
+    uses: ./.github/workflows/reusable-test-and-build.yaml
+    with:
+      working-directory: ./client

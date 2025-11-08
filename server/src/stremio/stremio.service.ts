@@ -1,0 +1,54 @@
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import { NodeEnvEnum } from 'src/config/enums/node-env.enum';
+import { SettingsStore } from 'src/settings/core/settings.store';
+
+import {
+  ContentTypeEnum,
+  ManifestDto,
+  ShortManifestResourceEnum,
+} from './dto/manifest.dto';
+
+@Injectable()
+export class StremioService {
+  constructor(
+    private configService: ConfigService,
+    private settingsStore: SettingsStore,
+  ) {}
+
+  async manifest(): Promise<ManifestDto> {
+    const nodeEnv = this.configService.getOrThrow<NodeEnvEnum>('app.node-env');
+    const version = this.configService.getOrThrow<string>('app.version');
+    const description =
+      this.configService.getOrThrow<string>('app.description');
+
+    const setting = await this.settingsStore.findOneOrThrow();
+
+    let id = 'hu.stremhu-source.addon';
+    let name = 'StremHU | Source';
+
+    if (nodeEnv !== NodeEnvEnum.PRODUCTION) {
+      id = `${id}.dev`;
+      name = `${name} (DEV)`;
+    }
+
+    const manifest: ManifestDto = {
+      id,
+      version,
+      name,
+      description,
+      resources: [ShortManifestResourceEnum.SRTEAM],
+      types: [ContentTypeEnum.MOVIE, ContentTypeEnum.SERIES],
+      idPrefixes: ['tt'],
+      catalogs: [],
+      behaviorHints: {
+        configurable: true,
+        configurationRequired: false,
+      },
+      logo: `${setting.endpoint}/logo.png`,
+    };
+
+    return manifest;
+  }
+}

@@ -1,0 +1,16 @@
+import { registerAs } from '@nestjs/config';
+import { z } from 'zod';
+
+import { TrackerConfig } from './interfaces/tracker.interface';
+import ZodUtil, { ZodConfig } from './utils/zod-util';
+
+export default registerAs('tracker', () => {
+  const configs: ZodConfig<TrackerConfig> = {
+    'ncore-url': {
+      value: process.env.NCORE_URL ?? 'https://ncore.pro',
+      zod: z.string().trim().nonempty(),
+    },
+  };
+
+  return ZodUtil.validate<TrackerConfig>(configs);
+});

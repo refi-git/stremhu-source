@@ -1,0 +1,55 @@
+/* generated using openapi-typescript-codegen -- do not edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { BaseHttpRequest } from './core/BaseHttpRequest';
+import type { OpenAPIConfig } from './core/OpenAPI';
+import { FetchHttpRequest } from './core/FetchHttpRequest';
+import { AuthenticationService } from './services/AuthenticationService';
+import { MeService } from './services/MeService';
+import { ReferenceDataService } from './services/ReferenceDataService';
+import { SettingsService } from './services/SettingsService';
+import { SettingsSetupService } from './services/SettingsSetupService';
+import { StremioService } from './services/StremioService';
+import { StremioStreamService } from './services/StremioStreamService';
+import { TrackersService } from './services/TrackersService';
+import { UsersService } from './services/UsersService';
+import { WebTorrentService } from './services/WebTorrentService';
+type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
+export class AppClient {
+    public readonly authentication: AuthenticationService;
+    public readonly me: MeService;
+    public readonly referenceData: ReferenceDataService;
+    public readonly settings: SettingsService;
+    public readonly settingsSetup: SettingsSetupService;
+    public readonly stremio: StremioService;
+    public readonly stremioStream: StremioStreamService;
+    public readonly trackers: TrackersService;
+    public readonly users: UsersService;
+    public readonly webTorrent: WebTorrentService;
+    public readonly request: BaseHttpRequest;
+    constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
+        this.request = new HttpRequest({
+            BASE: config?.BASE ?? '',
+            VERSION: config?.VERSION ?? '1.0.0',
+            WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
+            CREDENTIALS: config?.CREDENTIALS ?? 'include',
+            TOKEN: config?.TOKEN,
+            USERNAME: config?.USERNAME,
+            PASSWORD: config?.PASSWORD,
+            HEADERS: config?.HEADERS,
+            ENCODE_PATH: config?.ENCODE_PATH,
+        });
+        this.authentication = new AuthenticationService(this.request);
+        this.me = new MeService(this.request);
+        this.referenceData = new ReferenceDataService(this.request);
+        this.settings = new SettingsService(this.request);
+        this.settingsSetup = new SettingsSetupService(this.request);
+        this.stremio = new StremioService(this.request);
+        this.stremioStream = new StremioStreamService(this.request);
+        this.trackers = new TrackersService(this.request);
+        this.users = new UsersService(this.request);
+        this.webTorrent = new WebTorrentService(this.request);
+    }
+}
+
