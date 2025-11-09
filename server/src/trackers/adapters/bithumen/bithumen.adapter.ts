@@ -17,6 +17,10 @@ import {
 } from '../adapters.types';
 import { BithumenClient } from './bithumen.client';
 import {
+  BITHUMEN_MOVIE_CATEGORY_FILTERS,
+  BITHUMEN_SERIES_CATEGORY_FILTERS,
+} from './bithumen.constants';
+import {
   BithumenMovieCategoryEnum,
   BithumenSeriesCategoryEnum,
 } from './bithumen.types';
@@ -38,11 +42,11 @@ export class BithumenAdapter implements TrackerAdapter {
 
     switch (mediaType) {
       case StreamMediaTypeEnum.MOVIE:
-        categories = Object.values(BithumenMovieCategoryEnum);
+        categories = BITHUMEN_MOVIE_CATEGORY_FILTERS;
         break;
 
       case StreamMediaTypeEnum.SERIES:
-        categories = Object.values(BithumenSeriesCategoryEnum);
+        categories = BITHUMEN_SERIES_CATEGORY_FILTERS;
         break;
     }
 

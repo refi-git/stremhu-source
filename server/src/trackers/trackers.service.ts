@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   OnApplicationBootstrap,
 } from '@nestjs/common';
@@ -31,9 +32,9 @@ export class TrackersService implements OnApplicationBootstrap {
   private readonly adapters: TrackerAdapter[];
 
   constructor(
+    private readonly schedulerRegistry: SchedulerRegistry,
     ncoreAdapter: NcoreAdapter,
     bithumenAdapter: BithumenAdapter,
-    private readonly schedulerRegistry: SchedulerRegistry,
     private trackerCredentialsService: TrackerCredentialsService,
     private torrentCacheStore: TorrentCacheStore,
     private webTorrentService: WebTorrentService,
@@ -62,9 +63,19 @@ export class TrackersService implements OnApplicationBootstrap {
   }
 
   async findTorrents(query: TrackerSearchQuery): Promise<TrackerTorrent[]> {
+    const credentials = await this.trackerCredentialsService.find();
+
+    if (credentials.length === 0) {
+      throw new ForbiddenException(
+        '[StremHU | Source] Nincs konfigurálva tracker hitelesítési adat.',
+      );
+    }
+
     const results = await Promise.all(
-      // this.adapters.map((adapter) => this.findTrackerTorrents(adapter, query)),
-      [this.findTrackerTorrents(this.adapters[1], query)],
+      credentials.map((credential) => {
+        const adapter = this.getAdapter(credential.tracker);
+        return this.findTrackerTorrents(adapter, query);
+      }),
     );
 
     return results.flat();
@@ -100,7 +111,7 @@ export class TrackersService implements OnApplicationBootstrap {
     };
   }
 
-  async setHitAndRunCron(enabled: boolean) {
+  async setHitAndRunCron(enabled: boolean): Promise<void> {
     const job = this.schedulerRegistry.getCronJob('cleanupTorrents');
 
     if (enabled && !job.isActive) {
@@ -113,9 +124,13 @@ export class TrackersService implements OnApplicationBootstrap {
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_4AM, { name: 'cleanupTorrents' })
-  async cleanupHitAndRun() {
+  async cleanupHitAndRun(): Promise<void> {
+    const credentials = await this.trackerCredentialsService.find();
     await Promise.all(
-      this.adapters.map((adapter) => this.cleanupHitAndRunTracker(adapter)),
+      credentials.map((credential) => {
+        const adapter = this.getAdapter(credential.tracker);
+        return this.cleanupHitAndRunTracker(adapter);
+      }),
     );
   }
 
