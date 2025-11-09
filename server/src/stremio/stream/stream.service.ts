@@ -11,6 +11,7 @@ import { ParsedFile } from 'src/common/utils/parse-torrent.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TorrentCacheStore } from 'src/torrent-cache/core/torrent-cache.store';
 import { TrackerTorrent } from 'src/trackers/tracker.types';
+import { TRACKER_LABEL_MAP } from 'src/trackers/trackers.constants';
 import { TrackersService } from 'src/trackers/trackers.service';
 import { User } from 'src/users/entities/user.entity';
 import { WebTorrentService } from 'src/web-torrent/web-torrent.service';
@@ -65,7 +66,7 @@ export class StremioStreamService {
       const seeders = `🔼 ${videoFile.seeders}`;
 
       const descriptionArray = _.compact([
-        videoFile.fileName,
+        `[${TRACKER_LABEL_MAP[videoFile.tracker]}]${videoFile.fileName}`,
         [fileSize, seeders, videoFile.language.label].join(' | '),
       ]);
 
