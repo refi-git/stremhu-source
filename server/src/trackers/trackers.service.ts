@@ -18,6 +18,7 @@ import {
   AdapterTorrentId,
 } from './adapters/adapters.types';
 import { BithumenAdapter } from './adapters/bithumen/bithumen.adapter';
+import { MajomparadeAdapter } from './adapters/majomparade/majomparade.adapter';
 import { NcoreAdapter } from './adapters/ncore/ncore.adapter';
 import { TrackerCredentialsService } from './credentials/tracker-credentials.service';
 import { TrackerEnum } from './enums/tracker.enum';
@@ -39,12 +40,13 @@ export class TrackersService implements OnApplicationBootstrap {
     private readonly schedulerRegistry: SchedulerRegistry,
     ncoreAdapter: NcoreAdapter,
     bithumenAdapter: BithumenAdapter,
+    majomparadeAdapter: MajomparadeAdapter,
     private trackerCredentialsService: TrackerCredentialsService,
     private torrentCacheStore: TorrentCacheStore,
     private webTorrentService: WebTorrentService,
     private settingsStore: SettingsStore,
   ) {
-    this.adapters = [ncoreAdapter, bithumenAdapter];
+    this.adapters = [ncoreAdapter, bithumenAdapter, majomparadeAdapter];
   }
 
   async onApplicationBootstrap() {

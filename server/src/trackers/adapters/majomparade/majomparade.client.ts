@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { load } from 'cheerio';
 import _ from 'lodash';
@@ -6,7 +6,11 @@ import _ from 'lodash';
 import { parseTorrent } from 'src/common/utils/parse-torrent.util';
 import { TrackerEnum } from 'src/trackers/enums/tracker.enum';
 
-import { AdapterParsedTorrent, AdapterTorrentId } from '../adapters.types';
+import {
+  AdapterParsedTorrent,
+  AdapterTorrentId,
+  TRACKER_TOKEN,
+} from '../adapters.types';
 import { MajomparadeClientFactory } from './majomparade.client-factory';
 import {
   MAJOMPARADE_DOWNLOAD_PATH,
@@ -26,16 +30,17 @@ export class MajomparadeClient {
   private readonly majomparadeBaseUrl: string;
 
   constructor(
+    @Inject(TRACKER_TOKEN) private readonly tracker: TrackerEnum,
     private configService: ConfigService,
     private majomparadeClientFactory: MajomparadeClientFactory,
   ) {
     this.majomparadeBaseUrl = this.configService.getOrThrow<string>(
-      'tracker.bithumen-url',
+      'tracker.majomparade-url',
     );
   }
 
   login(payload: MajomparadeLoginRequest) {
-    return this.majomparadeClientFactory.login(payload, true);
+    return this.majomparadeClientFactory.login(payload);
   }
 
   find(payload: MajomparadeTorrentsQuery) {
@@ -51,21 +56,24 @@ export class MajomparadeClient {
 
     const url = new URL(MAJOMPARADE_TORRENTS_PATH, this.majomparadeBaseUrl);
 
-    url.searchParams.append('tipus', '1');
-    url.searchParams.append('tipuska', '0');
-    url.searchParams.append('imdb_search', 'yes');
-    url.searchParams.append('name', `https://www.imdb.com/title/${imdbId}/`);
-    url.searchParams.append('page', `${page}`);
+    const unixSeconds = Math.floor(Date.now() / 1000);
 
-    // Ténylegesen az IMDB URL kell
+    url.searchParams.append('tipus', '1');
+    url.searchParams.append('time', `${unixSeconds}`);
+    url.searchParams.append('k', 'yes');
+    url.searchParams.append('tipuska', '0');
+    url.searchParams.append('name', `https://www.imdb.com/title/${imdbId}/`);
+    url.searchParams.append('imdb_search', 'yes');
+    url.searchParams.append('page', `${page}`);
 
     categories.forEach((category) => {
       url.searchParams.append(`category[]`, `${category}`);
     });
 
-    const response = await this.majomparadeClientFactory.client.get<unknown>(
-      url.toString(),
-    );
+    const findUrl = url.toString();
+
+    const response =
+      await this.majomparadeClientFactory.client.get<unknown>(findUrl);
 
     const data = this.processTorrentsHtml(response.data);
 
@@ -108,7 +116,7 @@ export class MajomparadeClient {
     ).toString();
 
     return {
-      tracker: TrackerEnum.BITHUMEN,
+      tracker: this.tracker,
       torrentId,
       imdbId,
       downloadUrl,
@@ -217,7 +225,7 @@ export class MajomparadeClient {
       .get();
 
     const nextLink = $('p b')
-      .filter((_, el) => $(el).text().includes('Következő >>'))
+      .filter((_, el) => $(el).text().includes('Következő >>'))
       .first();
 
     const hasNextPage = nextLink.length > 0 && nextLink.parent().is('a');

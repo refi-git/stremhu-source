@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpException,
   Inject,
   Injectable,
   Logger,
@@ -7,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AxiosInstance } from 'axios';
-import { AxiosError, AxiosHeaders } from 'axios';
+import { AxiosHeaders, isAxiosError } from 'axios';
 import { load } from 'cheerio';
 import _ from 'lodash';
 import { CookieJar } from 'tough-cookie';
@@ -28,7 +29,7 @@ import { MajomparadeLoginRequest } from './majomparade.types';
 @Injectable()
 export class MajomparadeClientFactory {
   private readonly logger = new Logger(MajomparadeClientFactory.name);
-  private readonly bithumenBaseUrl: string;
+  private readonly majomparadeBaseUrl: string;
 
   private jar = new CookieJar();
   private axios: AxiosInstance = createAxios(this.jar);
@@ -39,8 +40,8 @@ export class MajomparadeClientFactory {
     private configService: ConfigService,
     private trackerCredentialsService: TrackerCredentialsService,
   ) {
-    this.bithumenBaseUrl = this.configService.getOrThrow<string>(
-      'tracker.bithumen-url',
+    this.majomparadeBaseUrl = this.configService.getOrThrow<string>(
+      'tracker.majomparade-url',
     );
 
     this.initInterceptors();
@@ -50,21 +51,59 @@ export class MajomparadeClientFactory {
     return this.axios;
   }
 
-  async login(payload: MajomparadeLoginRequest, firstLogin: boolean = false) {
-    const { username, password } = payload;
+  async login(payload?: MajomparadeLoginRequest) {
+    const errorMessage = getTrackerLoginErrorMessage(this.tracker);
 
-    const axios = firstLogin ? createAxios(this.jar) : this.axios;
+    let credential: MajomparadeLoginRequest | undefined;
+
+    if (payload) {
+      credential = payload;
+    } else {
+      const response = await this.trackerCredentialsService.findOne(
+        this.tracker,
+      );
+
+      if (!response) {
+        throw new ForbiddenException(
+          getTrackerCredentialErrorMessage(this.tracker),
+        );
+      }
+
+      credential = {
+        username: response.username,
+        password: response.password,
+      };
+    }
+
+    const { username, password } = credential;
+
+    await this.jar.removeAllCookies();
+    const axios = createAxios(this.jar);
 
     const url = new URL(
       MAJOMPARADE_LOGIN_PATH,
-      this.bithumenBaseUrl,
+      this.majomparadeBaseUrl,
     ).toString();
+
+    const loginResponse = await axios.get(url);
+
+    if (typeof loginResponse.data !== 'string') {
+      throw new UnauthorizedException();
+    }
+
+    const $login = load(loginResponse.data);
+    const getUnique = $login('.rejtett_input[name="getUnique"]')
+      .first()
+      .attr('value');
+
+    if (!getUnique) {
+      throw new UnauthorizedException(errorMessage);
+    }
 
     const form = new URLSearchParams();
     form.set('nev', username);
     form.set('jelszo', password);
-    // KELL EGY ID
-    form.set('getUnique', password);
+    form.set('getUnique', getUnique);
 
     const response = await axios.post(`${url}?belepes`, form, {
       headers: {
@@ -72,17 +111,8 @@ export class MajomparadeClientFactory {
       },
     });
 
-    if (typeof response.data !== 'string') {
-      throw new UnauthorizedException();
-    }
-
-    const $ = load(response.data);
-    const userDetailPath = $('#status a[href*="/userdetails.php?"]')
-      .first()
-      .attr('href');
-
-    if (!userDetailPath) {
-      throw new UnauthorizedException();
+    if (response.data !== 'location="index.php";') {
+      throw new UnauthorizedException(errorMessage);
     }
   }
 
@@ -90,19 +120,9 @@ export class MajomparadeClientFactory {
     this.axios.interceptors.response.use(
       async (res) => {
         const requestPath = _.get(res.request, ['path']) as string | undefined;
-        const checkPaths = ['/login.php', MAJOMPARADE_LOGIN_PATH];
-
-        const isLoginPath = checkPaths.some((checkPath) =>
-          requestPath?.includes(checkPath),
-        );
+        const isLoginPath = requestPath?.includes(MAJOMPARADE_LOGIN_PATH);
 
         if (isLoginPath) {
-          if (res.config._retry) {
-            throw new ForbiddenException(
-              getTrackerLoginErrorMessage(this.tracker),
-            );
-          }
-
           await this.relogin();
 
           if (res.config.headers) {
@@ -111,61 +131,57 @@ export class MajomparadeClientFactory {
             res.config.headers = headers;
           }
 
-          res.config._retry = true;
-
           return this.axios.request(res.config);
         }
 
         return res;
       },
-      async (error: AxiosError) => {
-        const { response, config } = error;
-
-        const sessionExpired =
-          response?.status === 401 || response?.status === 403;
-
-        if (!sessionExpired || !config || config._retry) {
-          return Promise.reject(error);
+      async (error: unknown) => {
+        if (error instanceof HttpException) {
+          throw error;
         }
 
-        await this.relogin();
+        if (isAxiosError(error)) {
+          const authErrorStatus = [401, 403];
 
-        config._retry = true;
+          const isAuthError = error.status
+            ? authErrorStatus.includes(error.status)
+            : false;
 
-        return this.axios.request(config);
+          const { config } = error;
+
+          if (!isAuthError || !config) {
+            throw error;
+          }
+
+          await this.relogin();
+
+          if (config.headers) {
+            const headers = AxiosHeaders.from(config.headers);
+            headers.delete('cookie');
+            config.headers = headers;
+          }
+
+          return this.axios.request(config);
+        }
+
+        throw error;
       },
     );
   }
 
-  private async relogin() {
+  private async relogin(): Promise<void> {
     if (this.loginInProgress) {
       return this.loginInProgress;
     }
 
-    this.loginInProgress = this.doRelogin();
+    this.loginInProgress = this.login();
 
     try {
+      this.logger.log(getTrackerRefreshMessage(this.tracker));
       await this.loginInProgress;
     } finally {
       this.loginInProgress = null;
     }
-
-    return this.loginInProgress;
-  }
-
-  private async doRelogin() {
-    this.logger.log(getTrackerRefreshMessage(this.tracker));
-
-    const credential = await this.trackerCredentialsService.findOne(
-      this.tracker,
-    );
-
-    if (!credential) {
-      throw new ForbiddenException(
-        getTrackerCredentialErrorMessage(this.tracker),
-      );
-    }
-
-    await this.login(credential);
   }
 }
