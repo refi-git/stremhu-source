@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { load } from 'cheerio';
 import _ from 'lodash';
@@ -11,6 +16,7 @@ import {
   AdapterTorrentId,
   TRACKER_TOKEN,
 } from '../adapters.types';
+import { getTrackerStructureErrorMessage } from '../adapters.utils';
 import { BithumenClientFactory } from './bithumen.client-factory';
 import {
   BITHUMEN_DETAILS_PATH,
@@ -27,6 +33,7 @@ import {
 
 @Injectable()
 export class BithumenClient {
+  private readonly logger = new Logger(BithumenClient.name);
   private readonly bithumenBaseUrl: string;
 
   constructor(
@@ -40,7 +47,7 @@ export class BithumenClient {
   }
 
   login(payload: BithumenLoginRequest) {
-    return this.bithumenClientFactory.login(payload, true);
+    return this.bithumenClientFactory.login(payload);
   }
 
   find(payload: BithumenTorrentsQuery) {
@@ -52,62 +59,79 @@ export class BithumenClient {
     page: number = 0,
     accumulator: BithumenTorrent[] = [],
   ): Promise<BithumenTorrent[]> {
-    const { imdbId, categories } = payload;
+    try {
+      const { imdbId, categories } = payload;
 
-    const url = new URL(BITHUMEN_TORRENTS_PATH, this.bithumenBaseUrl);
-    url.searchParams.append('genre', '0');
-    url.searchParams.append('search', imdbId);
-    url.searchParams.append('page', `${page}`);
+      const torrentsUrl = new URL(BITHUMEN_TORRENTS_PATH, this.bithumenBaseUrl);
+      torrentsUrl.searchParams.append('genre', '0');
+      torrentsUrl.searchParams.append('search', imdbId);
+      torrentsUrl.searchParams.append('page', `${page}`);
 
-    categories.forEach((category) => {
-      url.searchParams.append(`c${category}`, '1');
-    });
+      categories.forEach((category) => {
+        torrentsUrl.searchParams.append(`c${category}`, '1');
+      });
 
-    const response = await this.bithumenClientFactory.client.get<unknown>(
-      url.toString(),
-    );
+      const response = await this.bithumenClientFactory.client.get<string>(
+        torrentsUrl.href,
+        {
+          responseType: 'text',
+        },
+      );
 
-    const data = this.processTorrentsHtml(response.data);
+      const data = this.processTorrentsHtml(response.data);
 
-    accumulator = [...accumulator, ...data.results];
+      accumulator = [...accumulator, ...data.results];
 
-    if (data.hasNextPage) {
-      return this.findAll(payload, page + 1, accumulator);
-    } else {
+      if (data.hasNextPage) {
+        return this.findAll(payload, page + 1, accumulator);
+      }
+
       return accumulator;
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
   }
 
   async findOne(torrentId: string): Promise<AdapterTorrentId> {
-    const detailsUrl = new URL(BITHUMEN_DETAILS_PATH, this.bithumenBaseUrl);
-    detailsUrl.searchParams.append('id', torrentId);
+    try {
+      const detailsUrl = new URL(BITHUMEN_DETAILS_PATH, this.bithumenBaseUrl);
+      detailsUrl.searchParams.append('id', torrentId);
 
-    const response = await this.bithumenClientFactory.client.get<string>(
-      detailsUrl.href,
-    );
+      const response = await this.bithumenClientFactory.client.get<string>(
+        detailsUrl.href,
+      );
 
-    const $ = load(response.data);
+      const $ = load(response.data);
 
-    const downloadPath = $(`a[href*="download.php/${torrentId}"]`)
-      .first()
-      .attr('href');
-    const imdbUrl =
-      $('a[href*="www.imdb.com/title/"]').first().attr('href') || '';
+      const downloadPath = $(`a[href*="download.php/${torrentId}"]`)
+        .first()
+        .attr('href');
+      const imdbUrl =
+        $('a[href*="www.imdb.com/title/"]').first().attr('href') || '';
 
-    const imdbId = _.nth(imdbUrl.split('/'), -2);
+      const imdbId = _.nth(imdbUrl.split('/'), -2);
 
-    if (!downloadPath || !imdbId) {
-      throw new NotFoundException('bitHUmen torrent adatlapja nem található');
+      if (!downloadPath || !imdbId) {
+        throw new Error(
+          `"downloadPath": ${downloadPath} vagy "imdbId": ${imdbId} nem található`,
+        );
+      }
+
+      const downloadUrl = new URL(downloadPath, this.bithumenBaseUrl);
+
+      return {
+        tracker: this.tracker,
+        torrentId,
+        imdbId,
+        downloadUrl: downloadUrl.href,
+      };
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
-
-    const downloadUrl = new URL(downloadPath, this.bithumenBaseUrl).toString();
-
-    return {
-      tracker: this.tracker,
-      torrentId,
-      imdbId,
-      downloadUrl,
-    };
   }
 
   async download(payload: AdapterTorrentId): Promise<AdapterParsedTorrent> {
@@ -127,31 +151,41 @@ export class BithumenClient {
   }
 
   async hitnrun(): Promise<string[]> {
-    const userId = await this.bithumenClientFactory.getUserId();
+    try {
+      const userId = await this.bithumenClientFactory.getUserId();
 
-    const url = new URL(BITHUMEN_HIT_N_RUN_PATH, this.bithumenBaseUrl);
-    url.searchParams.append('id', userId);
-    url.searchParams.append('hnr', '1');
+      const hitAndRunUrl = new URL(
+        BITHUMEN_HIT_N_RUN_PATH,
+        this.bithumenBaseUrl,
+      );
+      hitAndRunUrl.searchParams.append('id', userId);
+      hitAndRunUrl.searchParams.append('hnr', '1');
 
-    const response = await this.bithumenClientFactory.client.get<unknown>(
-      url.toString(),
-    );
+      const response = await this.bithumenClientFactory.client.get<string>(
+        hitAndRunUrl.href,
+        {
+          responseType: 'text',
+        },
+      );
 
-    if (typeof response.data !== 'string') {
-      return [];
+      const $ = load(response.data);
+      const hitnrunTorrents = $('td a[href*="/details.php?id="]');
+      const torrentIds = hitnrunTorrents
+        .map((_, el) => $(el).attr('href'))
+        .get();
+
+      const sourceIds = torrentIds.map((hitnrunTorrent) => {
+        const url = new URL(hitnrunTorrent, this.bithumenBaseUrl);
+        const idParam = url.searchParams.get('id');
+        return idParam;
+      });
+
+      return _.compact(sourceIds);
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
-
-    const $ = load(response.data);
-    const hitnrunTorrents = $('td a[href*="/details.php?id="]');
-    const torrentIds = hitnrunTorrents.map((_, el) => $(el).attr('href')).get();
-
-    const sourceIds = torrentIds.map((hitnrunTorrent) => {
-      const url = new URL(hitnrunTorrent, this.bithumenBaseUrl);
-      const idParam = url.searchParams.get('id');
-      return idParam;
-    });
-
-    return _.compact(sourceIds);
   }
 
   private processTorrentsHtml(html: unknown): BithumenTorrents {

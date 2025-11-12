@@ -97,9 +97,9 @@ export class MajomparadeClient {
 
       if (data.hasNextPage) {
         return this.findAll(payload, page + 1, accumulator);
-      } else {
-        return accumulator;
       }
+
+      return accumulator;
     } catch (error) {
       const errorMessage = getTrackerStructureErrorMessage(this.tracker);
       this.logger.error(errorMessage, error);
