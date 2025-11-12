@@ -42,14 +42,12 @@ export class MajomparadeAdapter implements TrackerAdapter {
 
     let categories: string[] = [];
 
-    switch (mediaType) {
-      case StreamMediaTypeEnum.MOVIE:
-        categories = MAJOMPARADE_MOVIE_CATEGORY_FILTERS;
-        break;
+    if (mediaType === StreamMediaTypeEnum.MOVIE) {
+      categories = MAJOMPARADE_MOVIE_CATEGORY_FILTERS;
+    }
 
-      case StreamMediaTypeEnum.SERIES:
-        categories = MAJOMPARADE_SERIES_CATEGORY_FILTERS;
-        break;
+    if (mediaType === StreamMediaTypeEnum.SERIES) {
+      categories = MAJOMPARADE_SERIES_CATEGORY_FILTERS;
     }
 
     const torrents = await this.majomparadeClient.find({ imdbId, categories });

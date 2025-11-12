@@ -13,7 +13,7 @@ import {
 } from '../adapters.types';
 import { BithumenClientFactory } from './bithumen.client-factory';
 import {
-  BITHUMEN_DOWNLOAD_PATH,
+  BITHUMEN_DETAILS_PATH,
   BITHUMEN_HIT_N_RUN_PATH,
   BITHUMEN_TORRENTS_PATH,
 } from './bithumen.constants';
@@ -79,11 +79,11 @@ export class BithumenClient {
   }
 
   async findOne(torrentId: string): Promise<AdapterTorrentId> {
-    const url = new URL(BITHUMEN_DOWNLOAD_PATH, this.bithumenBaseUrl);
-    url.searchParams.append('id', torrentId);
+    const detailsUrl = new URL(BITHUMEN_DETAILS_PATH, this.bithumenBaseUrl);
+    detailsUrl.searchParams.append('id', torrentId);
 
     const response = await this.bithumenClientFactory.client.get<string>(
-      url.toString(),
+      detailsUrl.href,
     );
 
     const $ = load(response.data);
@@ -126,13 +126,10 @@ export class BithumenClient {
     return { torrentId, parsed };
   }
 
-  /**
-   * Visszaadja a “hit & run” nCore torrentek azonosítóit.
-   */
   async hitnrun(): Promise<string[]> {
     const userId = await this.bithumenClientFactory.getUserId();
-    const url = new URL(BITHUMEN_HIT_N_RUN_PATH, this.bithumenBaseUrl);
 
+    const url = new URL(BITHUMEN_HIT_N_RUN_PATH, this.bithumenBaseUrl);
     url.searchParams.append('id', userId);
     url.searchParams.append('hnr', '1');
 
@@ -171,22 +168,16 @@ export class BithumenClient {
       .map((_, torrentRow) => {
         const torrentColumns = $(torrentRow).children('td');
 
-        // Kategória
         const categoryHref = torrentColumns.eq(0).find('a').attr('href') || '';
         const category = categoryHref.replace('?cat=', '');
 
-        // Letöltés
         const downloadPath = torrentColumns
           .eq(1)
           .children('a')
           .eq(1)
           .attr('href')!;
-        const downloadUrl = new URL(
-          downloadPath,
-          this.bithumenBaseUrl,
-        ).toString();
+        const downloadUrl = new URL(downloadPath, this.bithumenBaseUrl);
 
-        // Torrent ID
         const torrentId = torrentColumns
           .eq(1)
           .children('a')
@@ -194,12 +185,11 @@ export class BithumenClient {
           .attr('href')!
           .replace('details.php?id=', '');
 
-        // Seeder
         const seeders = torrentColumns.eq(7).text();
 
         return {
           torrentId,
-          downloadUrl,
+          downloadUrl: downloadUrl.href,
           category: category as BithumenCategory,
           seeders: seeders,
         };

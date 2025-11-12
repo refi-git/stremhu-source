@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { load } from 'cheerio';
 import _ from 'lodash';
@@ -11,9 +16,10 @@ import {
   AdapterTorrentId,
   TRACKER_TOKEN,
 } from '../adapters.types';
+import { getTrackerStructureErrorMessage } from '../adapters.utils';
 import { MajomparadeClientFactory } from './majomparade.client-factory';
 import {
-  MAJOMPARADE_DOWNLOAD_PATH,
+  MAJOMPARADE_DETAILS_PATH,
   MAJOMPARADE_HIT_N_RUN_PATH,
   MAJOMPARADE_TORRENTS_PATH,
 } from './majomparade.constants';
@@ -27,6 +33,7 @@ import {
 
 @Injectable()
 export class MajomparadeClient {
+  private readonly logger = new Logger(MajomparadeClient.name);
   private readonly majomparadeBaseUrl: string;
 
   constructor(
@@ -52,75 +59,98 @@ export class MajomparadeClient {
     page: number = 0,
     accumulator: MajomparadeTorrent[] = [],
   ): Promise<MajomparadeTorrent[]> {
-    const { imdbId, categories } = payload;
+    try {
+      const { imdbId, categories } = payload;
 
-    const url = new URL(MAJOMPARADE_TORRENTS_PATH, this.majomparadeBaseUrl);
+      const torrentsUrl = new URL(
+        MAJOMPARADE_TORRENTS_PATH,
+        this.majomparadeBaseUrl,
+      );
 
-    const unixSeconds = Math.floor(Date.now() / 1000);
+      const unixSeconds = Math.floor(Date.now() / 1000);
 
-    url.searchParams.append('tipus', '1');
-    url.searchParams.append('time', `${unixSeconds}`);
-    url.searchParams.append('k', 'yes');
-    url.searchParams.append('tipuska', '0');
-    url.searchParams.append('name', `https://www.imdb.com/title/${imdbId}/`);
-    url.searchParams.append('imdb_search', 'yes');
-    url.searchParams.append('page', `${page}`);
+      torrentsUrl.searchParams.append('tipus', '1');
+      torrentsUrl.searchParams.append('time', `${unixSeconds}`);
+      torrentsUrl.searchParams.append('k', 'yes');
+      torrentsUrl.searchParams.append('tipuska', '0');
+      torrentsUrl.searchParams.append(
+        'name',
+        `https://www.imdb.com/title/${imdbId}/`,
+      );
+      torrentsUrl.searchParams.append('imdb_search', 'yes');
+      torrentsUrl.searchParams.append('page', `${page}`);
 
-    categories.forEach((category) => {
-      url.searchParams.append(`category[]`, `${category}`);
-    });
+      categories.forEach((category) => {
+        torrentsUrl.searchParams.append(`category[]`, `${category}`);
+      });
 
-    const findUrl = url.toString();
+      const response = await this.majomparadeClientFactory.client.get<string>(
+        torrentsUrl.href,
+        {
+          responseType: 'text',
+        },
+      );
 
-    const response =
-      await this.majomparadeClientFactory.client.get<unknown>(findUrl);
+      const data = this.processTorrentsHtml(response.data);
 
-    const data = this.processTorrentsHtml(response.data);
+      accumulator = [...accumulator, ...data.results];
 
-    accumulator = [...accumulator, ...data.results];
-
-    if (data.hasNextPage) {
-      return this.findAll(payload, page + 1, accumulator);
-    } else {
-      return accumulator;
+      if (data.hasNextPage) {
+        return this.findAll(payload, page + 1, accumulator);
+      } else {
+        return accumulator;
+      }
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
   }
 
   async findOne(torrentId: string): Promise<AdapterTorrentId> {
-    const url = new URL(MAJOMPARADE_DOWNLOAD_PATH, this.majomparadeBaseUrl);
-    url.searchParams.append('id', 'torrentId');
-
-    const response = await this.majomparadeClientFactory.client.get<string>(
-      url.toString(),
-    );
-
-    const $ = load(response.data);
-
-    const downloadPath = $(`a[href*="download.php?torrent=${torrentId}"]`)
-      .first()
-      .attr('href');
-    const imdbUrl =
-      $('a[href*="www.imdb.com/title/"]').first().attr('href') || '';
-
-    const imdbId = _.nth(imdbUrl.split('/'), -2);
-
-    if (!downloadPath || !imdbId) {
-      throw new NotFoundException(
-        'majomparade torrent adatlapja nem található',
+    try {
+      const detailsUrl = new URL(
+        MAJOMPARADE_DETAILS_PATH,
+        this.majomparadeBaseUrl,
       );
+      detailsUrl.searchParams.append('id', `${torrentId}`);
+
+      const response = await this.majomparadeClientFactory.client.get<string>(
+        detailsUrl.href,
+        {
+          responseType: 'text',
+        },
+      );
+
+      const $ = load(response.data);
+
+      const downloadPath = $(`a[href*="download.php?torrent=${torrentId}"]`)
+        .first()
+        .attr('href');
+      const imdbUrl =
+        $('a[href*="www.imdb.com/title/"]').first().attr('href') || '';
+
+      const imdbId = _.nth(imdbUrl.split('/'), -2);
+
+      if (!downloadPath || !imdbId) {
+        throw new Error(
+          `"downloadPath": ${downloadPath} vagy "imdbId": ${imdbId} nem található`,
+        );
+      }
+
+      const downloadUrl = new URL(downloadPath, this.majomparadeBaseUrl);
+
+      return {
+        tracker: this.tracker,
+        torrentId,
+        imdbId,
+        downloadUrl: downloadUrl.href,
+      };
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
-
-    const downloadUrl = new URL(
-      downloadPath,
-      this.majomparadeBaseUrl,
-    ).toString();
-
-    return {
-      tracker: this.tracker,
-      torrentId,
-      imdbId,
-      downloadUrl,
-    };
   }
 
   async download(payload: AdapterTorrentId): Promise<AdapterParsedTorrent> {
@@ -137,45 +167,41 @@ export class MajomparadeClient {
     return { torrentId, parsed };
   }
 
-  /**
-   * Visszaadja a “hit & run” nCore torrentek azonosítóit.
-   */
   async hitnrun(): Promise<string[]> {
-    const url = new URL(
-      MAJOMPARADE_HIT_N_RUN_PATH,
-      this.majomparadeBaseUrl,
-    ).toString();
+    try {
+      const hitAndRunUrl = new URL(
+        MAJOMPARADE_HIT_N_RUN_PATH,
+        this.majomparadeBaseUrl,
+      );
 
-    const response =
-      await this.majomparadeClientFactory.client.get<unknown>(url);
+      const response = await this.majomparadeClientFactory.client.get<string>(
+        hitAndRunUrl.href,
+        {
+          responseType: 'text',
+        },
+      );
 
-    if (typeof response.data !== 'string') {
-      return [];
+      const $ = load(response.data);
+
+      const hitnrunTorrents = $('.also td a[href*="details.php?id="')
+        .map((_, el) => $(el).attr('href'))
+        .get();
+
+      const sourceIds = hitnrunTorrents.map((hitnrunTorrent) => {
+        const url = new URL(hitnrunTorrent, this.majomparadeBaseUrl);
+        const idParam = url.searchParams.get('id');
+        return idParam;
+      });
+
+      return _.compact(sourceIds);
+    } catch (error) {
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
-
-    const $ = load(response.data);
-
-    const hitnrunTorrents = $('td a[href*="/details.php?id="')
-      .map((_, el) => $(el).attr('href'))
-      .get();
-
-    const sourceIds = hitnrunTorrents.map((hitnrunTorrent) => {
-      const url = new URL(hitnrunTorrent, this.majomparadeBaseUrl);
-      const idParam = url.searchParams.get('id');
-      return idParam;
-    });
-
-    return _.compact(sourceIds);
   }
 
-  private processTorrentsHtml(html: unknown): MajomparadeTorrents {
-    if (typeof html !== 'string') {
-      return {
-        results: [],
-        hasNextPage: false,
-      };
-    }
-
+  private processTorrentsHtml(html: string): MajomparadeTorrents {
     const $ = load(html);
     const torrentRows = $('#table tbody tr').slice(1);
 
@@ -185,7 +211,6 @@ export class MajomparadeClient {
       .each((_, torrentRow) => {
         const torrentColumns = $(torrentRow).children('td');
 
-        // Kategória
         const CATEGORY_URL = 'letoltes.php?k=yes&tipus=1&category[]=';
         const categoryHref = torrentColumns
           .eq(0)
@@ -193,31 +218,25 @@ export class MajomparadeClient {
           .attr('href');
         if (!categoryHref) return;
 
-        // Letöltés
         const downloadPath = torrentColumns
           .find(`a[href*="download.php?torrent="]`)
           .first()
           .attr('href');
         if (!downloadPath) return;
 
-        // Torrent ID
         const torrentId = `${downloadPath}`.replace(
           'download.php?torrent=',
           '',
         );
 
-        // Seeder
         const seeders = torrentColumns.eq(8).text();
 
         const categoryId = categoryHref.replace(CATEGORY_URL, '');
-        const downloadUrl = new URL(
-          downloadPath,
-          this.majomparadeBaseUrl,
-        ).toString();
+        const downloadUrl = new URL(downloadPath, this.majomparadeBaseUrl);
 
         torrents.push({
           torrentId,
-          downloadUrl,
+          downloadUrl: downloadUrl.href,
           category: categoryId as MajomparadeCategory,
           seeders: seeders,
         });

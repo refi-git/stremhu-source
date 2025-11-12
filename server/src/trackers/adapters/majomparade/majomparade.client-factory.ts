@@ -1,10 +1,11 @@
 import {
-  ForbiddenException,
+  BadRequestException,
   HttpException,
   Inject,
   Injectable,
   Logger,
-  UnauthorizedException,
+  ServiceUnavailableException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AxiosInstance } from 'axios';
@@ -22,6 +23,7 @@ import {
   getTrackerCredentialErrorMessage,
   getTrackerLoginErrorMessage,
   getTrackerRefreshMessage,
+  getTrackerStructureErrorMessage,
 } from '../adapters.utils';
 import { MAJOMPARADE_LOGIN_PATH } from './majomparade.constants';
 import { MajomparadeLoginRequest } from './majomparade.types';
@@ -52,67 +54,72 @@ export class MajomparadeClientFactory {
   }
 
   async login(payload?: MajomparadeLoginRequest) {
-    const errorMessage = getTrackerLoginErrorMessage(this.tracker);
+    try {
+      let credential: MajomparadeLoginRequest | undefined;
 
-    let credential: MajomparadeLoginRequest | undefined;
-
-    if (payload) {
-      credential = payload;
-    } else {
-      const response = await this.trackerCredentialsService.findOne(
-        this.tracker,
-      );
-
-      if (!response) {
-        throw new ForbiddenException(
-          getTrackerCredentialErrorMessage(this.tracker),
+      if (payload) {
+        credential = payload;
+      } else {
+        const response = await this.trackerCredentialsService.findOne(
+          this.tracker,
         );
+
+        if (!response) {
+          throw new BadRequestException(
+            getTrackerCredentialErrorMessage(this.tracker),
+          );
+        }
+
+        credential = {
+          username: response.username,
+          password: response.password,
+        };
       }
 
-      credential = {
-        username: response.username,
-        password: response.password,
-      };
-    }
+      const { username, password } = credential;
 
-    const { username, password } = credential;
+      await this.jar.removeAllCookies();
+      const axios = createAxios(this.jar);
 
-    await this.jar.removeAllCookies();
-    const axios = createAxios(this.jar);
+      const loginUrl = new URL(MAJOMPARADE_LOGIN_PATH, this.majomparadeBaseUrl);
 
-    const url = new URL(
-      MAJOMPARADE_LOGIN_PATH,
-      this.majomparadeBaseUrl,
-    ).toString();
+      const loginResponse = await axios.get<string>(loginUrl.href, {
+        responseType: 'text',
+      });
 
-    const loginResponse = await axios.get(url);
+      const $login = load(loginResponse.data);
+      const getUnique = $login('.rejtett_input[name="getUnique"]')
+        .first()
+        .attr('value');
 
-    if (typeof loginResponse.data !== 'string') {
-      throw new UnauthorizedException();
-    }
+      if (!getUnique) {
+        throw new Error('getUnique nem található');
+      }
 
-    const $login = load(loginResponse.data);
-    const getUnique = $login('.rejtett_input[name="getUnique"]')
-      .first()
-      .attr('value');
+      const form = new URLSearchParams();
+      form.set('nev', username);
+      form.set('jelszo', password);
+      form.set('getUnique', getUnique);
 
-    if (!getUnique) {
-      throw new UnauthorizedException(errorMessage);
-    }
+      const response = await axios.post(`${loginUrl.href}?belepes`, form, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
 
-    const form = new URLSearchParams();
-    form.set('nev', username);
-    form.set('jelszo', password);
-    form.set('getUnique', getUnique);
+      if (response.data !== 'location="index.php";') {
+        throw new UnprocessableEntityException(
+          getTrackerLoginErrorMessage(this.tracker),
+        );
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
 
-    const response = await axios.post(`${url}?belepes`, form, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-
-    if (response.data !== 'location="index.php";') {
-      throw new UnauthorizedException(errorMessage);
+      const errorMessage = getTrackerStructureErrorMessage(this.tracker);
+      this.logger.error(errorMessage, error);
+      throw new ServiceUnavailableException(errorMessage);
     }
   }
 
@@ -136,7 +143,7 @@ export class MajomparadeClientFactory {
 
         return res;
       },
-      async (error: unknown) => {
+      async (error) => {
         if (error instanceof HttpException) {
           throw error;
         }

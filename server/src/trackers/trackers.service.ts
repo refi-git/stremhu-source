@@ -6,7 +6,6 @@ import {
   OnApplicationBootstrap,
 } from '@nestjs/common';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
-import { isAxiosError } from 'axios';
 import _ from 'lodash';
 
 import { SettingsStore } from 'src/settings/core/settings.store';
@@ -66,17 +65,17 @@ export class TrackersService implements OnApplicationBootstrap {
         tracker,
         ...payload,
       });
-    } catch (error: unknown) {
-      if (error instanceof HttpException && error.getStatus() === 401) {
-        throw new BadRequestException(LOGIN_ERROR_MESSAGE);
-      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        if (error.getStatus() === 422) {
+          throw new BadRequestException(LOGIN_ERROR_MESSAGE);
+        }
 
-      if (isAxiosError(error) && error.response?.status === 401) {
-        throw new BadRequestException(LOGIN_ERROR_MESSAGE);
+        throw error;
       }
 
       throw new NotImplementedException(
-        `${tracker} bejelentkezés közben hiba történt, ellenőrizd az oldal elérhetőségét.`,
+        `Bejelentkezés közben hiba történt, próbáld újra!`,
       );
     }
   }

@@ -12,5 +12,5 @@ export const MAJOMPARADE_SERIES_CATEGORY_FILTERS = Object.values(
 
 export const MAJOMPARADE_LOGIN_PATH = '/login.php';
 export const MAJOMPARADE_TORRENTS_PATH = '/letoltes.php';
-export const MAJOMPARADE_DOWNLOAD_PATH = '/details.php';
+export const MAJOMPARADE_DETAILS_PATH = '/details.php';
 export const MAJOMPARADE_HIT_N_RUN_PATH = '/hitnrun.php';
