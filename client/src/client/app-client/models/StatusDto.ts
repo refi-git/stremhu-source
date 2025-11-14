@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type StatusDto = {
+    version: string;
     configured: boolean;
 };
 

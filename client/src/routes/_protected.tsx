@@ -29,7 +29,7 @@ function ProtectedLayout() {
   if (!me) throw new Error(`A 'me' nincs a cache-ben.`)
 
   return (
-    <div className="pt-18 pb-4">
+    <div className="min-h-screen flex flex-col">
       <div className="fixed flex justify-center items-center w-full h-14 top-0 left-0 bg-card border-b border-b-background z-50">
         <div className="flex justify-between items-center w-full max-w-3xl px-4">
           <Link to="/" className="flex items-center gap-2 font-medium">
@@ -76,7 +76,14 @@ function ProtectedLayout() {
           </div>
         </div>
       </div>
-      <Outlet />
+      <div className="flex-1 pt-18 pb-4">
+        <Outlet />
+      </div>
+      <div className="w-full bg-card border-t border-t-background">
+        <div>© 2025 StremHU | Source</div>
+        <div>Hibát találtál? Jelentsd GitHubon</div>
+        <div>v0.3.0 · GitHub</div>
+      </div>
     </div>
   )
 }
