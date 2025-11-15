@@ -12,7 +12,7 @@ Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakr�
 - **Majomparádé**
 
 > [!CAUTION]
-> A Majomparádé Hit'n'Run szabályzata szerint a teljes torrentet le kell tölteni. **A StremHU Source NEM tölti le a teljes torrentet!**
+> A Majomparádé Hit'n'Run szabályzata szerint a teljes torrentet le kell tölteni. **A StremHU | Source NEM tölti le a teljes torrentet!**
 
 ### Funkciók
 
