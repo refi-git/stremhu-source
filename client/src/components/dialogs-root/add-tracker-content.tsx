@@ -37,8 +37,8 @@ interface AddTrackerContentProps {
 
 const schema = z.object({
   tracker: z.enum(TrackerEnum),
-  trackerUsn: z.string().nonempty('A felhasználónév kitöltése kötelező'),
-  trackerPwd: z.string().nonempty('A jelszó kitöltése kötelező'),
+  trackerUsn: z.string().trim().nonempty('A felhasználónév kitöltése kötelező'),
+  trackerPwd: z.string().trim().nonempty('A jelszó kitöltése kötelező'),
 })
 
 export function AddTrackerContent(props: AddTrackerContentProps) {

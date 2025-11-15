@@ -28,7 +28,7 @@ interface ChangeUsernameContentProps {
 }
 
 const schema = z.object({
-  username: z.string().trim().nonempty('A felhasználónéb kitöltése kötelező'),
+  username: z.string().trim().nonempty('A felhasználónév kitöltése kötelező'),
 })
 
 export function ChangeUsernameContent(props: ChangeUsernameContentProps) {
