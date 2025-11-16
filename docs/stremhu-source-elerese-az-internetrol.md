@@ -1,4 +1,4 @@
-## StremHU | Source elérése az internetről (haladóknak)
+## StremHU | Source elérése az internetről
 
 Ebben a fejezetben azt mutatjuk meg, hogyan tudod a StremHU | Source-ot úgy beállítani, hogy **az otthoni hálózatodon kívülről is elérd** (pl. mobilnetről, munkahelyről).
 
