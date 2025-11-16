@@ -9,14 +9,18 @@ Lépésről lépésre útmutató, hogy otthon, a helyi hálózatodon tudd haszn�
 - A Stremio-ban hozzá tudod adni, mint kiegészítőt.
 
 > [!NOTE]
-> Ha azt szeretnéd, hogy az internetről is elérhető legyen (pl. mobilnetről), arról egy külön fejezet/útmutató szól: [„StremHU | Source elérése az internetről"](./stremhu-source-elerese-az-internetrol.md)
+> Ha azt szeretnéd, hogy az internetről is elérhető legyen (pl. mobilnetről), arról egy külön útmutató szól: ["StremHU | Source elérése az internetről"](./stremhu-source-elerese-az-internetrol.md)
+
+---
 
 ### 1. Amire szükséged lesz (előfeltételek)
 
 - Egy számítógép vagy NAS, amin fut a Docker.
   (pl. Docker Desktop Windows/Mac-en, vagy Container Manager Synology-n).
-- Egy Stremio fiók és a Stremio alkalmazás - [https://www.stremio.com/](https://www.stremio.com/).
+- Egy Stremio fiók és a Stremio alkalmazás - [https://www.stremio.com](https://www.stremio.com).
 - StremHU | Source által támogatott tracker hozzáférés.
+
+---
 
 ### 2. Külön mappa létrehozása a StremHU | Source számára
 
@@ -30,12 +34,11 @@ Először hozz létre egy mappát, ahova a StremHU | Source „csomagja” kerü
 
 A további lépésekben feltételezzük, hogy ebbe a mappába dolgozol.
 
+---
+
 ### 3. A docker-compose.yaml fájl elhelyezése
 
 Az előző lépésben létrehozott mappában hozz létre egy új fájlt `docker-compose.yaml` néven, és másold bele az alábbi tartalmat:
-
-> [!NOTE]
-> Ez egy alap példa. Ha szeretnél rajta változtatni (image név, portok, ENV változók), nézd meg a részletes útmutatót: [Docker Compose beállítási lehetőségek](./docker-compose-beallitasi-lehetosegek.md)
 
 ```yaml
 services:
@@ -61,7 +64,12 @@ networks:
     driver: bridge
 ```
 
-### 4. A StremHU Source elindítása Docker Compose-szal
+> [!NOTE]
+> Ez egy alap példa. Ha szeretnél rajta változtatni (image név, portok, ENV változók), nézd meg a részletes útmutatót: ["Docker Compose beállítási lehetőségek"](./docker-compose-beallitasi-lehetosegek.md)
+
+---
+
+### 4. A StremHU | Source elindítása Docker Compose-szal
 
 - Windows: Start menü → „PowerShell” vagy „Parancssor”
 - Mac: „Terminal” alkalmazás
@@ -81,7 +89,7 @@ networks:
    cd ~/stremhu-source
    ```
 
-2. Indítsd el a StremHU Source-ot a következő paranccsal:
+2. Indítsd el a StremHU | Source-ot a következő paranccsal:
 
 ```bash
    docker compose up -d
@@ -91,6 +99,8 @@ networks:
 - `-d` = „detached” mód, azaz a háttérben fog futni
 
 Ha minden rendben ment, a Docker létrehoz egy `stremhu-source` nevű konténert, ami ezentúl automatikusan fut (és ha leáll a gép, indításkor újra elindítható).
+
+---
 
 ### 5. Ellenőrizd, hogy fut-e
 
@@ -109,10 +119,12 @@ Példák:
 
 Mit kell látnod?
 
-- A StremHU Source felületét.
+- A StremHU | Source felületét.
 - Első indításkor admin fiókot kell létrehozni.
 
-### 5. Tracker és URL beállítása
+---
+
+### 6. Tracker és URL beállítása
 
 - A fiók létrehozása után hozzá kell adni a tracker-t, amit használni szeretnél a `Beállítások - Trackerek` résznél.
 
@@ -122,7 +134,9 @@ Mit kell látnod?
 
 Ezzel azt érted el, hogy a StremHU | Source ezzel az URL-el rendelkező információkat küld majd a Stremio-nak, amit el is fog fogadni.
 
-### 6. StremHU | Source hozzáadása a Stremio-hoz
+---
+
+### 7. StremHU | Source hozzáadása a Stremio-hoz
 
 Nincs más dolgod, mint a `Fiókom` menüpontban a Stremio integráció a `Stremio integráció` résznél választani egy lehetőséget.
 
