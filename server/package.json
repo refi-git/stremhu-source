@@ -1,6 +1,6 @@
 {
   "name": "@stremhu/source",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Magyar forrásokból elérhető streamek Stremio-hoz: WebTorrent‑alapú lejátszás, felbontás/nyelv beállítások és saját tracker‑hitelesítés.",
   "author": "Benedek Bálint",
   "license": "MIT",
@@ -24,13 +24,13 @@
   },
   "dependencies": {
     "@ctrl/video-filename-parser": "5.4.1",
-    "@nestjs/common": "11.1.8",
+    "@nestjs/common": "11.1.9",
     "@nestjs/config": "4.0.2",
-    "@nestjs/core": "11.1.8",
-    "@nestjs/platform-express": "11.1.8",
+    "@nestjs/core": "11.1.9",
+    "@nestjs/platform-express": "11.1.9",
     "@nestjs/schedule": "6.0.1",
     "@nestjs/serve-static": "5.0.4",
-    "@nestjs/swagger": "11.2.1",
+    "@nestjs/swagger": "11.2.2",
     "@nestjs/typeorm": "11.0.0",
     "@node-rs/argon2": "2.0.2",
     "axios": "1.12.2",
@@ -43,7 +43,7 @@
     "filesize": "11.0.13",
     "internal-ip": "8.0.1",
     "is-video": "2.0.0",
-    "jose": "6.1.0",
+    "jose": "6.1.2",
     "lodash": "4.17.21",
     "mime-types": "3.0.1",
     "ms": "2.1.3",
@@ -61,8 +61,8 @@
     "@eslint/js": "9.39.1",
     "@nestjs/cli": "11.0.10",
     "@nestjs/schematics": "11.0.9",
-    "@nestjs/testing": "11.1.8",
-    "@trivago/prettier-plugin-sort-imports": "5.2.2",
+    "@nestjs/testing": "11.1.9",
+    "@trivago/prettier-plugin-sort-imports": "6.0.0",
     "@types/better-sqlite3": "7.6.13",
     "@types/express": "5.0.5",
     "@types/express-session": "1.18.2",
@@ -88,7 +88,7 @@
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.46.3"
+    "typescript-eslint": "8.46.4"
   },
   "jest": {
     "moduleFileExtensions": [
