@@ -9,6 +9,7 @@ import {
   ManifestDto,
   ShortManifestResourceEnum,
 } from './dto/manifest.dto';
+import { ID_PREFIX } from './stream/stremio.constants';
 
 @Injectable()
 export class StremioService {
@@ -40,7 +41,7 @@ export class StremioService {
       description,
       resources: [ShortManifestResourceEnum.SRTEAM],
       types: [ContentTypeEnum.MOVIE, ContentTypeEnum.SERIES],
-      idPrefixes: ['tt'],
+      idPrefixes: ['tt', ID_PREFIX],
       catalogs: [],
       behaviorHints: {
         configurable: true,

@@ -7,7 +7,7 @@ export const getSettingsSetupStatus = queryOptions({
   staleTime: Infinity,
   gcTime: Infinity,
   queryFn: async () => {
-    const setupStatus = await appClient.settingsSetup.setupControllerStatus()
+    const setupStatus = await appClient.settings.setupControllerStatus()
     return setupStatus
   },
 })

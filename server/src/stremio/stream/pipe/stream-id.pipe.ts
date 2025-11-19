@@ -1,6 +1,8 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
 import { isString, toInteger } from 'lodash';
 
+import { ID_PREFIX } from '../stremio.constants';
+
 export interface ParsedStreamIdSeries {
   season: number;
   episode: number;
@@ -14,7 +16,7 @@ export interface ParsedStreamId {
 @Injectable()
 export class StreamIdPipe implements PipeTransform<string, ParsedStreamId> {
   transform(value: string): ParsedStreamId {
-    const parts = value.split(':');
+    const parts = value.split(':').filter((part) => part !== ID_PREFIX);
     const [imdb, seasonPart, episodePart] = parts;
 
     let season: number | undefined;
