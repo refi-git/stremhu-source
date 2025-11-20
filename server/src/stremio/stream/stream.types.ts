@@ -69,6 +69,7 @@ export interface VideoFileWithRank {
   tracker: TrackerEnum;
   torrentId: string;
   seeders: number;
+  group?: string;
 
   infoHash: string;
   fileName: string;

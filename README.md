@@ -18,7 +18,7 @@ Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakr�
 
 - **Self-host** Dockerrel – távolról is elérheted, és streamelhetsz róla.
 - **Automatikus seeding** a lejátszás után; opcionálisan **Hit’n’Run figyelés**, teljesítés után törlés.
-- **Felhasználókezelés** – mindenki saját preferenciákkal használhatja az addont Stremióban, anélkül hogy megosztanád a tracker-hozzáférést.
+- **Felhasználókezelés** – mindenki saját preferenciákkal használhatja az addont Stremio-ban, anélkül hogy megosztanád a tracker-hozzáférést.
 - **Helyi hálózaton automatikus HTTPS** támogatás.
 
 > [!TIP]

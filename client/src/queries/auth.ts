@@ -38,7 +38,7 @@ export function useRegistration() {
 
   return useMutation({
     mutationFn: async (payload: CreateSetupDto) => {
-      await appClient.settingsSetup.setupControllerCreate(payload)
+      await appClient.settings.setupControllerCreate(payload)
     },
     onSuccess: async () => {
       await queryClient.fetchQuery({ ...getSettingsSetupStatus, staleTime: 0 })

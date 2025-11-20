@@ -9,7 +9,6 @@ import { AuthenticationService } from './services/AuthenticationService';
 import { MeService } from './services/MeService';
 import { ReferenceDataService } from './services/ReferenceDataService';
 import { SettingsService } from './services/SettingsService';
-import { SettingsSetupService } from './services/SettingsSetupService';
 import { StremioService } from './services/StremioService';
 import { StremioStreamService } from './services/StremioStreamService';
 import { TrackersService } from './services/TrackersService';
@@ -21,7 +20,6 @@ export class AppClient {
     public readonly me: MeService;
     public readonly referenceData: ReferenceDataService;
     public readonly settings: SettingsService;
-    public readonly settingsSetup: SettingsSetupService;
     public readonly stremio: StremioService;
     public readonly stremioStream: StremioStreamService;
     public readonly trackers: TrackersService;
@@ -44,7 +42,6 @@ export class AppClient {
         this.me = new MeService(this.request);
         this.referenceData = new ReferenceDataService(this.request);
         this.settings = new SettingsService(this.request);
-        this.settingsSetup = new SettingsSetupService(this.request);
         this.stremio = new StremioService(this.request);
         this.stremioStream = new StremioStreamService(this.request);
         this.trackers = new TrackersService(this.request);

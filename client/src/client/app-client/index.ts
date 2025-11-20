@@ -43,7 +43,6 @@ export { AuthenticationService } from './services/AuthenticationService';
 export { MeService } from './services/MeService';
 export { ReferenceDataService } from './services/ReferenceDataService';
 export { SettingsService } from './services/SettingsService';
-export { SettingsSetupService } from './services/SettingsSetupService';
 export { StremioService } from './services/StremioService';
 export { StremioStreamService } from './services/StremioStreamService';
 export { TrackersService } from './services/TrackersService';
