@@ -73,7 +73,11 @@ export class StremioStreamService {
       return torrentSuccesses.push(torrent);
     });
 
-    const videoFiles = this.findVideoFilesWithRank(torrentSuccesses, series);
+    const videoFiles = this.findVideoFilesWithRank(
+      user,
+      torrentSuccesses,
+      series,
+    );
     const filteredVideoFiles = this.filterVideoFiles(videoFiles, user);
     const sortedVideoFiles = this.sortVideoFiles(filteredVideoFiles);
 
@@ -99,11 +103,13 @@ export class StremioStreamService {
       }
 
       const fileSize = `💾 ${filesize(videoFile.fileSize)}`;
-      const seeders = `🔼 ${videoFile.seeders}`;
+      const seeders = `👥 ${videoFile.seeders}`;
+      const tracker = `🧲 ${TRACKER_LABEL_MAP[videoFile.tracker]}`;
+      const group = videoFile.group ? `🎯 ${videoFile.group}` : undefined;
 
       const descriptionArray = _.compact([
-        `🧲 ${TRACKER_LABEL_MAP[videoFile.tracker]} | ${videoFile.fileName}`,
-        [fileSize, seeders, videoFile.language.label].join(' | '),
+        _.compact([tracker, seeders, group]).join(' | '),
+        [fileSize, videoFile.language.label].join(' | '),
       ]);
 
       const bingeGroup = [
@@ -189,6 +195,7 @@ export class StremioStreamService {
   }
 
   private findVideoFilesWithRank(
+    user: User,
     torrents: TrackerTorrentSuccess[],
     series?: ParsedStreamIdSeries,
   ): VideoFileWithRank[] {
@@ -202,6 +209,7 @@ export class StremioStreamService {
         videoCodec: torrentVideoCodec,
         resolution: torrentResolution,
         audioCodec: torrentAudioCodec,
+        group: torrentGroup,
       } = filenameParse(torrent.parsed.name);
 
       const videoFile = this.selectVideoFile({
@@ -230,14 +238,18 @@ export class StremioStreamService {
         tracker: torrent.tracker,
         torrentId: torrent.torrentId,
         seeders: torrent.seeders,
+        group: torrentGroup || undefined,
 
         infoHash: torrent.parsed.infoHash,
         fileName: videoFile.file.name,
         fileSize: videoFile.file.length,
         fileIndex: videoFile.fileIndex,
 
-        language: this.toLanguageInfo(torrent.language),
-        resolution: this.toResolutionInfo(resolution || torrent.resolution),
+        language: this.toLanguageInfo(torrent.language, user),
+        resolution: this.toResolutionInfo(
+          resolution || torrent.resolution,
+          user,
+        ),
         audioCodec,
         videoCodec,
         sources,
@@ -384,60 +396,80 @@ export class StremioStreamService {
     return !isVideoFile || isSample;
   }
 
-  private toLanguageInfo(language: LanguageEnum): VideoFileLanguage {
+  private toLanguageInfo(
+    language: LanguageEnum,
+    user: User,
+  ): VideoFileLanguage {
+    const index = user.torrentLanguages.indexOf(language);
+
+    let rank: number | undefined = undefined;
+    if (index !== -1) {
+      rank = index + 1;
+    }
+
     const videoFileLanguage: VideoFileLanguage = {
       emoji: '🇭🇺',
       label: '🇭🇺 magyar',
-      rank: 1,
+      rank: rank || 91,
       value: language,
     };
 
     if (language !== LanguageEnum.HU) {
       videoFileLanguage.emoji = '🇬🇧';
       videoFileLanguage.label = '🇬🇧 english';
-      videoFileLanguage.rank = 2;
+      videoFileLanguage.rank = rank || 92;
     }
 
     return videoFileLanguage;
   }
 
-  private toResolutionInfo(resolution: ResolutionEnum): VideoFileResolution {
+  private toResolutionInfo(
+    resolution: ResolutionEnum,
+    user: User,
+  ): VideoFileResolution {
+    const resolutionIndex = user.torrentResolutions.indexOf(resolution);
+
+    let resolutionRank: number | undefined = undefined;
+    if (resolutionIndex !== -1) {
+      resolutionRank = resolutionIndex + 1;
+    }
+
     switch (resolution) {
       case ResolutionEnum.R2160P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 1,
+          rank: resolutionRank || 91,
         };
       case ResolutionEnum.R1080P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 2,
+          rank: resolutionRank || 92,
         };
       case ResolutionEnum.R720P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 3,
+          rank: resolutionRank || 93,
         };
       case ResolutionEnum.R576P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 4,
+          rank: resolutionRank || 94,
         };
       case ResolutionEnum.R540P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 5,
+          rank: resolutionRank || 95,
         };
       case ResolutionEnum.R480P:
         return {
           label: RESOLUTION_LABEL_MAP[resolution],
           value: resolution,
-          rank: 6,
+          rank: resolutionRank || 96,
         };
     }
   }

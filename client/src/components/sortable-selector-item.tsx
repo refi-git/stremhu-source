@@ -2,25 +2,25 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MoveVerticalIcon, TrashIcon } from 'lucide-react'
 
-import type { ResolutionEnum } from '@/client/app-client'
-import { useReferenceDataOptionLabel } from '@/hooks/use-reference-data-option-label'
+import type { LanguageEnum, ResolutionEnum } from '@/client/app-client'
 
-import { Button } from '../ui/button'
-import { Label } from '../ui/label'
+import { Button } from './ui/button'
+import { Label } from './ui/label'
 
-interface SortableItemProps {
-  resolution: ResolutionEnum
+interface SortableSelectorItemProps<T> {
+  item: T
+  label: string
   isDisabled: boolean
-  onDelete: (resolution: ResolutionEnum) => void
+  onDelete: (item: T) => void
 }
 
-export function SortableItem(props: SortableItemProps) {
-  const { resolution, isDisabled, onDelete } = props
-
-  const { getResolutionLabel } = useReferenceDataOptionLabel()
+export function SortableSelectorItem<T extends ResolutionEnum | LanguageEnum>(
+  props: SortableSelectorItemProps<T>,
+) {
+  const { item, label, isDisabled, onDelete } = props
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: resolution })
+    useSortable({ id: item })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -29,7 +29,7 @@ export function SortableItem(props: SortableItemProps) {
 
   return (
     <div ref={setNodeRef} style={style} className="flex justify-between">
-      <div key={resolution} className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4">
         <Button
           size="icon"
           className="rounded-full size-6"
@@ -38,14 +38,14 @@ export function SortableItem(props: SortableItemProps) {
         >
           <MoveVerticalIcon />
         </Button>
-        <Label htmlFor={resolution}>{getResolutionLabel(resolution)}</Label>
+        <Label>{label}</Label>
       </div>
       <Button
         variant="destructive"
         size="icon"
         className="rounded-full size-6"
         disabled={isDisabled}
-        onClick={() => onDelete(resolution)}
+        onClick={() => onDelete(item)}
       >
         <TrashIcon />
       </Button>

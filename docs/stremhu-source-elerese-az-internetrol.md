@@ -177,7 +177,7 @@ Egy tipikus, jól működő recept:
    - kívül 443 → belül 443 (reverse proxy).
 4. StremHU | Source URL beállítása
    - a StremHU | Source „Addon URL”-jéhez már a publikus domaint írod (pl. `https://stremhu.valami.hu`).
-5. Addon beállítása Stremióban
+5. Addon beállítása Stremio-ban
    - a Stremio felé is ezt az URL-t adod meg.
 
 Ha ez megvan, ugyanazzal az URL-lel eléred a StremHU | Source-ot otthonról és az internetről is.

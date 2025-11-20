@@ -2,10 +2,12 @@ import { useForm } from '@tanstack/react-form'
 import { useQueries } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
-import { LanguageEnum } from '@/client/app-client'
+import type { LanguageEnum, ResolutionEnum } from '@/client/app-client'
 import { SEED_OPTIONS } from '@/common/constrants'
 import { userPreferencesSchema } from '@/common/schemas'
 import { parseApiError } from '@/common/utils'
+import { LanguagesSelector } from '@/components/form/languages-selector'
+import { ResolutionsSelector } from '@/components/form/resolutions-selector'
 import {
   Card,
   CardContent,
@@ -21,7 +23,6 @@ import {
 } from '@/components/ui/item'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Switch } from '@/components/ui/switch'
 import { getMe, useUpdateMePreferences } from '@/queries/me'
 import { getReferenceData } from '@/queries/reference-data'
 
@@ -78,42 +79,36 @@ export function TorrentsPreferences() {
           <ItemContent>
             <ItemTitle>Filmek, sorozatok nyelve</ItemTitle>
             <ItemDescription>
-              Milyen nyelvű filmhez, sorozathoz kapcsolódó torrentek jelenjenek
-              meg?
+              Állítsd be, milyen nyelvű tartalmak jelenjenek meg.
             </ItemDescription>
             <form.Field name="torrentLanguages" mode="array">
               {(field) => (
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {referenceData.option.languages.map((language) => {
-                    const checked = field.state.value.includes(language.value)
-                    const isDisabled = field.state.value.length === 1 && checked
-                    return (
-                      <div
-                        key={language.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <Switch
-                          id={language.value}
-                          checked={checked}
-                          disabled={
-                            isDisabled || language.value === LanguageEnum.HU
-                          }
-                          onCheckedChange={(check) => {
-                            if (check) {
-                              field.pushValue(language.value)
-                            } else {
-                              const index = field.state.value.findIndex(
-                                (value) => value === language.value,
-                              )
-                              field.removeValue(index)
-                            }
-                          }}
-                        />
-                        <Label htmlFor={language.value}>{language.label}</Label>
-                      </div>
+                <LanguagesSelector
+                  className="mt-2"
+                  items={field.state.value}
+                  onAdd={(language) => {
+                    field.pushValue(language)
+                  }}
+                  onDelete={(language) => {
+                    const index = field.state.value.findIndex(
+                      (value) => value === language,
                     )
-                  })}
-                </div>
+                    field.removeValue(index)
+                  }}
+                  onSortableDragEnd={(event) => {
+                    const { active, over } = event
+
+                    if (!over || active.id === over.id) return
+                    const oldIndex = field.state.value.indexOf(
+                      active.id as LanguageEnum,
+                    )
+                    const newIndex = field.state.value.indexOf(
+                      over.id as LanguageEnum,
+                    )
+                    if (oldIndex < 0 || newIndex < 0) return
+                    field.moveValue(oldIndex, newIndex)
+                  }}
+                />
               )}
             </form.Field>
           </ItemContent>
@@ -122,43 +117,36 @@ export function TorrentsPreferences() {
           <ItemContent>
             <ItemTitle>Filmek, sorozatok minősége</ItemTitle>
             <ItemDescription>
-              Milyen minőségű filmhez, sorozathoz kapcsolódó torrentek
-              jelenjenek meg?
+              Állítsd be, milyen minőségű tartalmak jelenjenek meg.
             </ItemDescription>
             <form.Field name="torrentResolutions" mode="array">
               {(field) => (
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {referenceData.option.resolutions.map((resolution) => {
-                    const checked = field.state.value.includes(resolution.value)
-                    const isDisabled = field.state.value.length === 1 && checked
-
-                    return (
-                      <div
-                        key={resolution.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <Switch
-                          id={resolution.value}
-                          checked={checked}
-                          disabled={isDisabled}
-                          onCheckedChange={(check) => {
-                            if (check) {
-                              field.pushValue(resolution.value)
-                            } else {
-                              const index = field.state.value.findIndex(
-                                (value) => value === resolution.value,
-                              )
-                              field.removeValue(index)
-                            }
-                          }}
-                        />
-                        <Label htmlFor={resolution.value}>
-                          {resolution.label}
-                        </Label>
-                      </div>
+                <ResolutionsSelector
+                  className="mt-2"
+                  items={field.state.value}
+                  onAdd={(resolution) => {
+                    field.pushValue(resolution)
+                  }}
+                  onDelete={(resolution) => {
+                    const index = field.state.value.findIndex(
+                      (value) => value === resolution,
                     )
-                  })}
-                </div>
+                    field.removeValue(index)
+                  }}
+                  onSortableDragEnd={(event) => {
+                    const { active, over } = event
+
+                    if (!over || active.id === over.id) return
+                    const oldIndex = field.state.value.indexOf(
+                      active.id as ResolutionEnum,
+                    )
+                    const newIndex = field.state.value.indexOf(
+                      over.id as ResolutionEnum,
+                    )
+                    if (oldIndex < 0 || newIndex < 0) return
+                    field.moveValue(oldIndex, newIndex)
+                  }}
+                />
               )}
             </form.Field>
           </ItemContent>
