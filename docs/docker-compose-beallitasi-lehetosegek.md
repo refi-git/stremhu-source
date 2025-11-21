@@ -38,6 +38,7 @@ networks:
 | `HTTPS_PORT`                    | Ezen a porton fut a HTTPS szerver, amennyiben a beállításoknál a `Hozzáférés otthoni hálózaton` van beállítva.                                   |          3443           |
 | `SESSION_SECRET`                | Session titkosításának beállítása.                                                                                                               |     stremhu-source      |
 | `WEB_TORRENT_PORT`              | Web Torrent ezt a portot használja a seedelésre                                                                                                  |          6881           |
+| `WEB_TORRENT_PEER_LIMIT`        | Web Torrent peet limit beállítása, torrentenként értendő! Minnél több peer-re csatlakozik annál nagyobb a CPU terhelés.                          |           10            |
 | `WEB_TORRENT_STORE_CACHE_SLOTS` | Web Torrent hány darab marad memóriában minnél magasabb annál kevesebb lemez-I/O, simább lejátszás / gyorsabb hozzáférés, de több RAM-ot foglal. |           20            |
 | `NCORE_URL`                     | nCore weboldal URL módósítása esetén van lehetőség a módosításra.                                                                                |    https://ncore.pro    |
 | `BITHUMEN_URL`                  | BitHUmen weboldal URL módósítása esetén van lehetőség a módosításra.                                                                             |   https://bithumen.be   |

@@ -55,6 +55,7 @@ export class WebTorrentService
       webSeeds: false,
       lsd: false,
       torrentPort: this.configService.getOrThrow<number>('web-torrent.port'),
+      maxConns: this.configService.getOrThrow<number>('web-torrent.peer-limit'),
       uploadLimit: setting.uploadLimit,
     });
 

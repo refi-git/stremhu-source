@@ -44,7 +44,7 @@ import { useReferenceDataOptionLabel } from '@/hooks/use-reference-data-option-l
 import { getMe } from '@/queries/me'
 import { getReferenceData } from '@/queries/reference-data'
 import { useDeleteUser, useUpdateProfile } from '@/queries/users'
-import { useConfirmDialogStore } from '@/store/confirm-dialog-store'
+import { useConfirmDialog } from '@/store/confirm-dialog-store'
 import { DialogEnum, useDialogs } from '@/store/dialogs-store'
 
 interface UserProfileProps {
@@ -65,7 +65,7 @@ export function UserProfile(props: UserProfileProps) {
   if (!me) throw new Error(`Nincs "me" a cache-ben`)
 
   const { getUserRoleLabel } = useReferenceDataOptionLabel()
-  const { confirm } = useConfirmDialogStore()
+  const confirm = useConfirmDialog()
   const { handleOpen } = useDialogs()
 
   const { urlEndpoint } = useIntegrationDomain({
@@ -112,13 +112,13 @@ export function UserProfile(props: UserProfileProps) {
   }
 
   const handleDeleteUser = async () => {
-    const ok = await confirm({
+    await confirm({
       title: `Biztos törölni szeretnéd?`,
       description: `"${user.username}" törlése végleges és nem lehetséges visszaállítani!`,
+      onConfirm: async () => {
+        await deleteUser(user.id)
+      },
     })
-    if (!ok) return
-
-    await deleteUser(user.id)
   }
 
   return (
