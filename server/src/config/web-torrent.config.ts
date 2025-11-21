@@ -9,6 +9,11 @@ import ZodUtil, { ZodConfig } from './utils/zod-util';
 export default registerAs('web-torrent', () => {
   const port =
     process.env.WEB_TORRENT_PORT && _.parseInt(process.env.WEB_TORRENT_PORT);
+
+  const peerLimit =
+    process.env.WEB_TORRENT_PEER_LIMIT &&
+    _.parseInt(process.env.WEB_TORRENT_PEER_LIMIT);
+
   const storeCacheSlots =
     process.env.WEB_TORRENT_STORE_CACHE_SLOTS &&
     _.parseInt(process.env.WEB_TORRENT_STORE_CACHE_SLOTS);
@@ -25,6 +30,10 @@ export default registerAs('web-torrent', () => {
     'torrents-dir': {
       value: join(process.cwd(), '../data/torrents'),
       zod: z.string().trim().nonempty(),
+    },
+    'peer-limit': {
+      value: peerLimit || 10,
+      zod: z.number(),
     },
     'store-cache-slots': {
       value: storeCacheSlots || 20,

@@ -1,4 +1,4 @@
-import { Controller, Get, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, Res, UseGuards } from '@nestjs/common';
 import {
   ApiParam,
   ApiPermanentRedirectResponse,
@@ -31,6 +31,12 @@ export class StremioController {
 
   @ApiResponse({ type: ManifestDto })
   @Get('/manifest.json')
+  @Header(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate',
+  )
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
   async manifest(): Promise<ManifestDto> {
     return this.stremioService.manifest();
   }
