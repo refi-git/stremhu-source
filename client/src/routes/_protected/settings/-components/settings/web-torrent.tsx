@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch'
 import { getSettings, useUpdateSetting } from '@/queries/settings'
 
 const schema = z.object({
+  downloadLimit: z.coerce.number<string>().positive().nullable(),
   uploadLimit: z.coerce.number<string>().positive().nullable(),
   hitAndRun: z.boolean(),
 })
@@ -42,6 +43,7 @@ export function WebTorrent() {
 
   const form = useForm({
     defaultValues: {
+      downloadLimit: setting.downloadLimit,
       uploadLimit: setting.uploadLimit,
       hitAndRun: setting.hitAndRun,
     },
@@ -61,6 +63,7 @@ export function WebTorrent() {
         await updateSetting({
           ...value,
           uploadLimit: value.uploadLimit ? Number(value.uploadLimit) : -1,
+          downloadLimit: value.downloadLimit ? Number(value.downloadLimit) : -1,
         })
         toast.success('Módosítások elmentve')
       } catch (error) {
@@ -81,6 +84,44 @@ export function WebTorrent() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-6">
+          <form.Field name="downloadLimit">
+            {(field) => (
+              <Field>
+                <FieldLabel htmlFor={field.name}>
+                  WebTorrent letöltési sebesség
+                </FieldLabel>
+                <FieldDescription>
+                  A túl magas letöltési sebesség CPU terhelést okoz! Ajánlott
+                  200 Mbit/s alatt tartani.
+                </FieldDescription>
+                <InputGroup>
+                  <InputGroupInput
+                    placeholder="Nincs limitálva"
+                    inputMode="numeric"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value ?? ''}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      const value = e.target.value
+
+                      if (isEmpty(value)) {
+                        field.handleChange(null)
+                      } else {
+                        field.handleChange(e.target.value)
+                      }
+                    }}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText>Mbit/s</InputGroupText>
+                  </InputGroupAddon>
+                </InputGroup>
+                {field.state.meta.isTouched && (
+                  <FieldError errors={field.state.meta.errors} />
+                )}
+              </Field>
+            )}
+          </form.Field>
           <form.Field name="uploadLimit">
             {(field) => (
               <Field>
@@ -88,7 +129,8 @@ export function WebTorrent() {
                   WebTorrent feltöltési sebesség
                 </FieldLabel>
                 <FieldDescription>
-                  Limitáld a kliens feltöltési sebességét.
+                  A túl magas feltöltési sebesség CPU terhelést okoz! Ajánlott
+                  200 Mbit/s alatt tartani.
                 </FieldDescription>
                 <InputGroup>
                   <InputGroupInput
