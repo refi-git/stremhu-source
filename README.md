@@ -2,6 +2,8 @@
 
 Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakról** streamelhetsz.
 
+![A StremHU | Source által betöltött torrentek a Stremio felületén.](./docs/assets/stremio-stremhu-source-list.png)
+
 > [!NOTE]
 > Ez egy szabadidős projekt! Hibajelentéseket és fejlesztési ötleteket szívesen fogadok kulturáltan "issue"-k formájában.
 
