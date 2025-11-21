@@ -5,8 +5,10 @@
 export type UpdateSettingDto = {
     enebledlocalIp?: boolean;
     endpoint?: string;
+    downloadLimit?: number;
     uploadLimit?: number;
     hitAndRun?: boolean;
     cacheRetention?: Record<string, any> | null;
+    catalogToken?: Record<string, any> | null;
 };
 

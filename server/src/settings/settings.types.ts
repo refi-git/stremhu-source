@@ -2,6 +2,7 @@ export interface SettingToCreate {
   id: string;
   enebledlocalIp: boolean;
   endpoint: string;
+  downloadLimit: number;
   uploadLimit: number;
   hitAndRun: boolean;
   cacheRetention: string | null;
@@ -10,6 +11,7 @@ export interface SettingToCreate {
 export interface SettingToUpdate {
   enebledlocalIp?: boolean;
   endpoint?: string;
+  downloadLimit?: number;
   uploadLimit?: number;
   hitAndRun?: boolean;
   cacheRetention?: string | null;

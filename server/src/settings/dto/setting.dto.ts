@@ -28,6 +28,10 @@ export class SettingDto {
 
   @IsNumber()
   @ApiProperty()
+  downloadLimit: number;
+
+  @IsNumber()
+  @ApiProperty()
   uploadLimit: number;
 
   @IsBoolean()

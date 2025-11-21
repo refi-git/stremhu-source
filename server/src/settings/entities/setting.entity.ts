@@ -15,6 +15,9 @@ export class Setting {
   @Column({ type: 'text' })
   endpoint!: string;
 
+  @Column({ name: 'download_limit', type: 'integer', default: -1 })
+  downloadLimit!: number;
+
   @Column({ name: 'upload_limit', type: 'integer', default: -1 })
   uploadLimit!: number;
 

@@ -56,6 +56,7 @@ export class WebTorrentService
       lsd: false,
       torrentPort: this.configService.getOrThrow<number>('web-torrent.port'),
       maxConns: this.configService.getOrThrow<number>('web-torrent.peer-limit'),
+      downloadLimit: setting.downloadLimit,
       uploadLimit: setting.uploadLimit,
     });
 
@@ -197,6 +198,10 @@ export class WebTorrentService
     });
 
     await Promise.all(torrents.map((torrent) => this.delete(torrent.infoHash)));
+  }
+
+  updateDownloadLimit(downloadLimit: number) {
+    this.client.throttleDownload(downloadLimit);
   }
 
   updateUploadLimit(uploadLimit: number) {

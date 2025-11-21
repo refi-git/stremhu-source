@@ -33,6 +33,11 @@ export class UpdateSettingDto {
   @IsOptional()
   @IsNumber()
   @ApiProperty({ required: false })
+  downloadLimit: number;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({ required: false })
   uploadLimit: number;
 
   @IsOptional()

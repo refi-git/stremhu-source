@@ -53,6 +53,14 @@ export class SettingsService implements OnModuleInit {
       await this.torrentCacheService.setRetentionCleanupCron(updateState);
     }
 
+    // Web Torrent letöltés beállítása
+    if (
+      !_.isUndefined(payload.downloadLimit) &&
+      setting.downloadLimit !== payload.downloadLimit
+    ) {
+      this.webTorrentService.updateDownloadLimit(payload.downloadLimit);
+    }
+
     // Web Torrent feltöltés beállítása
     if (
       !_.isUndefined(payload.uploadLimit) &&
@@ -93,7 +101,8 @@ export class SettingsService implements OnModuleInit {
       hitAndRun: false,
       enebledlocalIp: true,
       endpoint: localIp,
-      uploadLimit: -1,
+      downloadLimit: 12500000,
+      uploadLimit: 12500000,
       cacheRetention: '14d',
     });
   }
