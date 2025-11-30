@@ -1,6 +1,7 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
-import { CookieJar } from 'tough-cookie';
+import type { CookieJar } from 'tough-cookie';
 
 export function createAxios(jar: CookieJar): AxiosInstance {
   return wrapper(

@@ -23,10 +23,10 @@ import { DialogEnum, useDialogs } from '@/store/dialogs-store'
 
 const networkCheckMap = {
   idle: {
-    title: 'Elérés ellenőrzése...',
+    title: '🔎 Elérés ellenőrzése...',
   },
   pending: {
-    title: 'Elérés ellenőrzése...',
+    title: '🔎 Elérés ellenőrzése...',
   },
   success: {
     title: '🟢 Elérés rendben',
