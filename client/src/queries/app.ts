@@ -21,8 +21,15 @@ export function getHealth(appUrl: string) {
 
       await sleep(1000)
 
-      const response = await customAppClient.app.health()
-      return response
+      const request = customAppClient.app.health()
+      const timer = setTimeout(() => request.cancel(), 5_000)
+
+      try {
+        const response = await request
+        return response
+      } finally {
+        clearTimeout(timer)
+      }
     },
   })
 }
