@@ -37,7 +37,7 @@ export function Torrents() {
   }
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
+    <div className="grid gap-4">
       {data.map((torrent) => (
         <Torrent key={torrent.infoHash} torrent={torrent} />
       ))}

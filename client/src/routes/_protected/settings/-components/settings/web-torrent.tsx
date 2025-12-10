@@ -1,15 +1,9 @@
 import { useForm } from '@tanstack/react-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { isEmpty } from 'lodash'
-import { TriangleAlertIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/shared/components/ui/alert'
 import {
   Card,
   CardContent,
@@ -151,15 +145,6 @@ export function WebTorrent() {
               </Field>
             )}
           </form.Field>
-          <Alert>
-            <TriangleAlertIcon />
-            <AlertTitle>Figyelmeztetés magas CPU használatra!</AlertTitle>
-            <AlertDescription>
-              A túl magas letöltési vagy feltöltési sebesség jelentősen
-              terhelheti a processzort. Javasolt a WebTorrent sebességkorlátokat
-              200 Mbit/s alatt tartani.
-            </AlertDescription>
-          </Alert>
           <form.Field name="hitAndRun">
             {(field) => (
               <Label htmlFor={field.name} className="flex items-start gap-3">
