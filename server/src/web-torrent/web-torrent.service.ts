@@ -134,7 +134,9 @@ export class WebTorrentService
       );
 
       if (!webTorrentRun) {
-        await this.delete(torrent.infoHash);
+        this.logger.warn(
+          `⚠️ A ${torrent.name} nem található a futó torrentek között!`,
+        );
         continue;
       }
 
@@ -280,9 +282,15 @@ export class WebTorrentService
       const ageMs = nowMs - new Date(orphanTorrent.createdAt).getTime();
       if (ageMs < 10_000) return;
 
-      deletePromise.push(this.delete(orphanTorrent.infoHash));
+      deletePromise.push(
+        this.webTorrentRunsService.delete(orphanTorrent.infoHash),
+      );
     });
 
-    await Promise.all(deletePromise);
+    try {
+      await Promise.all(deletePromise);
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 }
