@@ -6,11 +6,14 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import _ from 'lodash';
 import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { In, Not } from 'typeorm';
 import type { Torrent, TorrentFile } from 'webtorrent';
 
+import { safeReaddir } from 'src/common/utils/file.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TorrentCacheStore } from 'src/torrent-cache/core/torrent-cache.store';
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
@@ -29,10 +32,11 @@ export class WebTorrentService
   private client: import('webtorrent').Instance;
 
   constructor(
-    private configService: ConfigService,
-    private webTorrentRunsService: WebTorrentRunsService,
-    private torrentCacheStore: TorrentCacheStore,
-    private settingsStore: SettingsStore,
+    private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly configService: ConfigService,
+    private readonly webTorrentRunsService: WebTorrentRunsService,
+    private readonly torrentCacheStore: TorrentCacheStore,
+    private readonly settingsStore: SettingsStore,
   ) {
     this.downloadsDir = this.configService.getOrThrow<string>(
       'web-torrent.downloads-dir',
@@ -145,6 +149,8 @@ export class WebTorrentService
         total: torrent.length,
         uploaded: torrent.uploaded + webTorrentRun.uploaded,
         uploadSpeed: torrent.uploadSpeed,
+        updatedAt: webTorrentRun.updatedAt,
+        createdAt: webTorrentRun.createdAt,
       };
 
       activeTorrents.push(activeTorrent);
@@ -247,5 +253,36 @@ export class WebTorrentService
         this.delete(trackerTorrentRun.infoHash),
       ),
     );
+  }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async cleanupOrphanTorrents() {
+    const nowMs = new Date().getTime();
+
+    const [torrents, torrentDirents] = await Promise.all([
+      this.getTorrents(),
+      safeReaddir(this.downloadsDir),
+    ]);
+
+    const torrentNames = torrentDirents.map(
+      (torrentDirent) => torrentDirent.name,
+    );
+
+    const orphanTorrents = _.differenceWith(
+      torrents,
+      torrentNames,
+      (torrent, torrentName) => torrent.name === torrentName,
+    );
+
+    const deletePromise: Promise<void>[] = [];
+
+    orphanTorrents.forEach((orphanTorrent) => {
+      const ageMs = nowMs - new Date(orphanTorrent.createdAt).getTime();
+      if (ageMs < 10_000) return;
+
+      deletePromise.push(this.delete(orphanTorrent.infoHash));
+    });
+
+    await Promise.all(deletePromise);
   }
 }
