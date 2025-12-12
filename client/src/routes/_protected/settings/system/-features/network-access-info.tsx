@@ -57,9 +57,8 @@ export function NetworkAccessInfo() {
         <Item variant="default" className="p-0">
           <ItemContent>
             <ItemTitle>{networkCheckMap[healthStatus].title}</ItemTitle>
-            <ItemDescription>
-              Elérési cím:{' '}
-              <span className="font-bold font-mono">{metadata.endpoint}</span>
+            <ItemDescription className="font-bold font-mono break-all">
+              {metadata.endpoint}
             </ItemDescription>
           </ItemContent>
           <ItemActions>
