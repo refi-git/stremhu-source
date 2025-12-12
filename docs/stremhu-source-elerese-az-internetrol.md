@@ -10,10 +10,10 @@ Ahhoz, hogy kívülről is elérd a StremHU | Source-ot, három dolog kell:
    – pl. `stremhu.valami.hu` vagy `stremhu.duckdns.org`.
 
 2. **Egy reverse proxy**, ami a kintről érkező kéréseket továbbítja a StremHU | Source felé  
-   – pl. Synology Reverse Proxy, Caddy, Traefik stb.
+   – pl. [Nginx Proxy Manager](https://nginxproxymanager.com/), Synology Reverse Proxy, Caddy, Traefik stb.
 
 3. **Egy megoldás a változó IP cím követésére (DDNS – Dynamic DNS)**  
-   – pl. DuckDNS, No-IP, Synology DDNS.
+   – pl. [DuckDNS](https://www.duckdns.org/), No-IP, Synology DDNS.
 
 > Ez egy haladó rész. Itt már routert, domainnevet és tanúsítványokat (HTTPS) is érintünk. Ha bizonytalan vagy, érdemes lépésről lépésre haladni, és először csak a helyi hálózatos beállítást beüzemelni.
 
@@ -45,8 +45,8 @@ Ezt a DSM felületén tudod beállítani a **DDNS** résznél; ilyenkor a NAS au
 
 Ha nincs Synology NAS, használhatsz ingyenes DDNS-t, pl.:
 
-- DuckDNS
-- No-IP
+- [DuckDNS](https://www.duckdns.org/)
+- [No-IP](https://www.noip.com/)
 
 A folyamat általában:
 
@@ -69,7 +69,7 @@ Ha „saját” domainnevet szeretnél (pl. `stremhu.valami.hu`), akkor:
 
 ### 2. Változó IP cím kezelése (DDNS)
 
-A legtöbb otthoni internet-előfizetés **dinamikus IP címet** ad – időnként megváltozhat. Ha csak simán A rekordot állítasz a domainen, az **el fog romlani**, amikor az IP-d változik.
+A legtöbb otthoni internet-előfizetés **dinamikus IP címet** ad - időnként megváltozhat. Ha csak simán `A` rekordot állítasz a domainen, az **el fog romlani**, amikor az IP-d változik.
 
 Itt jön be a DDNS (Dynamic DNS):
 
@@ -125,27 +125,39 @@ Lépések nagy vonalakban:
 
 Ezzel elérted, hogy amikor kintről valaki a `https://stremhu.valami.hu` címet nyitja meg, a reverse proxy továbbdobja a kérést a helyi StremHU | Source-ra.
 
-#### 3.2. Caddy mint reverse proxy (NAS-tól független megoldás)
+#### Nginx Proxy Manager mint reverse proxy (NAS-tól független megoldás)
 
-Ha nem Synology-t használsz (vagy saját megoldást szeretnél), nagyon kényelmes reverse proxy a **Caddy**:
+Ha nem Synology-t használsz (vagy saját, rugalmas megoldást szeretnél), az [**Nginx Proxy Manager**](https://nginxproxymanager.com/) nagyon kényelmes reverse proxy:
 
-- automatikus HTTPS (Let’s Encrypt / ZeroSSL),
-- egyszerű konfiguráció: akár 3–4 soros Caddyfile is elég.
+- webes felület (nem kell Nginx config fájlokat kézzel írni),
+- ingyenes SSL / Let’s Encrypt beépítve, automatikus megújítással,
+- Docker image-ként futtatható (adatbázist használ).
 
 Egyszerű példa Caddyfile-ra:
 
-```caddy
-stremhu.valami.hu {
-    reverse_proxy 192.168.1.100:3000
-}
+```yaml
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "81:81" # Admin felület
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
 ```
 
-Ha ezt lefuttatod, a Caddy:
+Az Nginx Proxy Manager admin felülete alapból a 81-es porton érhető el.
 
-- megszerzi és automatikusan megújítja a tanúsítványt a `stremhu.valami.hu` névre,
-- továbbítja a kéréseket a StremHU | Source felé a helyi hálózaton.
+Proxy host létrehozása (UI-ban):
 
-Caddyt futtathatsz Dockerben is, akár ugyanazon a gépen vagy NAS-on, ahol a StremHU konténer fut.
+1. Hosts → Proxy Hosts → Add Proxy Host
+2. Domain Names: pl. `stremhu.valami.hu`
+3. Forward Hostname / IP: `192.168.1.100`
+4. Forward Port: `3000`
+5. SSL fülön: kérj **Let’s Encrypt** tanúsítványt, és kapcsold be a “Force SSL”-t (ha szeretnéd).
 
 ---
 
@@ -170,9 +182,9 @@ Internet (443) → Router → NAS/gép (443) → Reverse proxy → StremHU | Sou
 Egy tipikus, jól működő recept:
 
 1. DDNS beállítása
-   - Synology DDNS vagy DuckDNS / No-IP hostnév.
+   - DuckDNS / No-IP vagy Synology DDNS hostnév.
 2. Reverse proxy beállítása
-   - Synology Reverse Proxy vagy Caddy (Dockerben).
+   - Nginx Proxy Manager (Dockerben) vagy Synology Reverse Proxy.
 3. Router porttovábbítás
    - kívül 443 → belül 443 (reverse proxy).
 4. StremHU | Source URL beállítása
