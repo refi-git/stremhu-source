@@ -1,9 +1,7 @@
 import { useQueries } from '@tanstack/react-query'
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { PlusIcon, TrashIcon } from 'lucide-react'
-import type { MouseEvent } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { PlusIcon } from 'lucide-react'
 
-import { useConfirmDialog } from '@/features/confirm/use-confirm-dialog'
 import { useDialogs } from '@/routes/-features/dialogs/dialogs-store'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -14,20 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card'
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from '@/shared/components/ui/item'
 import { Separator } from '@/shared/components/ui/separator'
-import { useMetadataLabel } from '@/shared/hooks/use-metadata-label'
-import type { UserDto } from '@/shared/lib/source-client'
 import { assertExists } from '@/shared/lib/utils'
 import { getMe } from '@/shared/queries/me'
-import { getUsers, useDeleteUser } from '@/shared/queries/users'
+import { getUsers } from '@/shared/queries/users'
 
+import { UserItem } from './-components/user-item'
 import { SETTINGS_USERS_NAME } from './route'
 
 export const Route = createFileRoute('/_protected/settings/users/')({
@@ -41,25 +31,7 @@ function RouteComponent() {
   assertExists(users)
   assertExists(me)
 
-  const confirmDialog = useConfirmDialog()
   const dialogs = useDialogs()
-
-  const { getUserRoleLabel } = useMetadataLabel()
-  const { mutateAsync: deleteUser } = useDeleteUser()
-
-  const handleDeleteUser =
-    (user: UserDto) => async (event: MouseEvent<HTMLButtonElement>) => {
-      event.preventDefault()
-      event.stopPropagation()
-
-      await confirmDialog.confirm({
-        title: `Biztos törölni szeretnéd?`,
-        description: `"${user.username}" törlése végleges és nem lehetséges visszaállítani!`,
-        onConfirm: async () => {
-          await deleteUser(user.id)
-        },
-      })
-    }
 
   return (
     <Card>
@@ -81,35 +53,11 @@ function RouteComponent() {
       <Separator />
       <CardContent className="grid gap-3">
         {users.map((user) => (
-          <Link
+          <UserItem
             key={user.id}
-            to="/settings/users/$userId"
-            params={{ userId: user.id }}
-          >
-            <Item variant="muted">
-              <ItemContent>
-                <ItemTitle>
-                  {user.username}
-                  <span className="text-xs text-muted-foreground">
-                    ({getUserRoleLabel(user.userRole)})
-                  </span>
-                </ItemTitle>
-                <ItemDescription>{user.stremioToken}</ItemDescription>
-              </ItemContent>
-              {me.id !== user.id && (
-                <ItemActions>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    className="rounded-full"
-                    onClick={handleDeleteUser(user)}
-                  >
-                    <TrashIcon />
-                  </Button>
-                </ItemActions>
-              )}
-            </Item>
-          </Link>
+            user={user}
+            deleteDisabled={user.id === me.id}
+          />
         ))}
       </CardContent>
     </Card>

@@ -26,7 +26,6 @@ function UserRoute() {
       <div className="break-inside-avoid mb-4">
         <UserProfile user={user} />
       </div>
-
       <div className="break-inside-avoid mb-4">
         <LanguagePreferences user={user} />
       </div>
