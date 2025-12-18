@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { TorrentCacheService } from 'src/torrent-cache/torrent-cache.service';
-import { WebTorrentService } from 'src/web-torrent/web-torrent.service';
+import { TorrentsService } from 'src/torrents/torrents.service';
 
 import { TrackerEnum } from '../enum/tracker.enum';
 import { TrackerCredential } from './entity/tracker-credential.entity';
@@ -14,7 +14,7 @@ export class TrackerCredentialsService {
   constructor(
     @InjectRepository(TrackerCredential)
     private trackerCredentialRepository: Repository<TrackerCredential>,
-    private webTorrentService: WebTorrentService,
+    private torrentsService: TorrentsService,
     private torrentCacheService: TorrentCacheService,
   ) {}
 
@@ -63,7 +63,7 @@ export class TrackerCredentialsService {
     const repository = this.getRepository(manager);
     await repository.remove(credential);
 
-    await this.webTorrentService.deleteAllByTracker(tracker);
+    await this.torrentsService.deleteAllByTracker(tracker);
     await this.torrentCacheService.deleteAllByTracker(tracker);
   }
 }

@@ -11,7 +11,7 @@ import {
   IsUUID,
 } from 'class-validator';
 
-import { LanguageEnum } from 'src/common/enums/language.enum';
+import { LanguageEnum } from 'src/common/enum/language.enum';
 
 import { UserRoleEnum } from '../enum/user-role.enum';
 

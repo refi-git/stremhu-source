@@ -19,15 +19,21 @@ export class TrackerCredential {
   @Column({ type: 'text' })
   password!: string;
 
-  @Column({ name: 'hit_and_run', type: 'boolean', default: false })
-  hitAndRun!: boolean;
+  @Column({ name: 'hit_and_run', type: 'boolean', nullable: true })
+  hitAndRun!: boolean | null;
+
+  @Column({ name: 'extra_seed_seconds', type: 'int', nullable: true })
+  extraSeedSeconds!: number | null;
 
   @Column({ name: 'download_full_torrent', type: 'boolean', default: false })
   downloadFullTorrent!: boolean;
 
+  @Column({ name: 'order_index', default: 0 })
+  orderIndex!: number;
+
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt?: Date;
 }

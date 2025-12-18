@@ -12,18 +12,18 @@ import { TorrentFile } from 'webtorrent';
 
 import { CatalogService } from 'src/catalog/catalog.service';
 import { RESOLUTION_LABEL_MAP } from 'src/common/common.constant';
-import { LanguageEnum } from 'src/common/enums/language.enum';
+import { LanguageEnum } from 'src/common/enum/language.enum';
 import { ParsedFile } from 'src/common/utils/parse-torrent.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TorrentCacheStore } from 'src/torrent-cache/core/torrent-cache.store';
 import { TorrentsService } from 'src/torrents/torrents.service';
 import { Torrent } from 'src/torrents/type/torrent.type';
+import { TrackerTorrentStatusEnum } from 'src/trackers/enum/tracker-torrent-status.enum';
 import {
   TrackerTorrentError,
-  TrackerTorrentStatusEnum,
   TrackerTorrentSuccess,
 } from 'src/trackers/tracker.types';
-import { TRACKER_LABEL_MAP } from 'src/trackers/trackers.constants';
+import { TRACKER_INFO } from 'src/trackers/trackers.constants';
 import { TrackersService } from 'src/trackers/trackers.service';
 import { User } from 'src/users/entity/user.entity';
 
@@ -116,7 +116,7 @@ export class StremioStreamService {
 
       const fileSize = `💾 ${filesize(videoFile.fileSize)}`;
       const seeders = `👥 ${videoFile.seeders}`;
-      const tracker = `🧲 ${TRACKER_LABEL_MAP[videoFile.tracker]}`;
+      const tracker = `🧲 ${TRACKER_INFO[videoFile.tracker].label}`;
       const group = videoFile.group ? `🎯 ${videoFile.group}` : undefined;
 
       const descriptionArray = _.compact([

@@ -3,25 +3,19 @@ import {
   HttpException,
   Injectable,
   NotImplementedException,
-  OnApplicationBootstrap,
 } from '@nestjs/common';
-import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 import _ from 'lodash';
 
-import { SettingsStore } from 'src/settings/core/settings.store';
 import { TorrentCacheStore } from 'src/torrent-cache/core/torrent-cache.store';
-import { TorrentsService } from 'src/torrents/torrents.service';
 
 import {
   AdapterParsedTorrent,
   AdapterTorrentId,
 } from './adapters/adapters.types';
-import { BithumenAdapter } from './adapters/bithumen/bithumen.adapter';
-import { MajomparadeAdapter } from './adapters/majomparade/majomparade.adapter';
-import { NcoreAdapter } from './adapters/ncore/ncore.adapter';
 import { TrackerCredentialsService } from './credentials/tracker-credentials.service';
 import { TrackerTorrentStatusEnum } from './enum/tracker-torrent-status.enum';
 import { TrackerEnum } from './enum/tracker.enum';
+import { TrackerAdapterRegistry } from './tracker-adapter.registry';
 import {
   LoginRequest,
   TrackerAdapter,
@@ -32,34 +26,16 @@ import {
 import { LOGIN_ERROR_MESSAGE } from './trackers.constants';
 
 @Injectable()
-export class TrackersService implements OnApplicationBootstrap {
-  private readonly adapters: TrackerAdapter[];
-
+export class TrackerDiscoveryService {
   constructor(
-    private readonly schedulerRegistry: SchedulerRegistry,
-    ncoreAdapter: NcoreAdapter,
-    bithumenAdapter: BithumenAdapter,
-    majomparadeAdapter: MajomparadeAdapter,
-    private trackerCredentialsService: TrackerCredentialsService,
-    private torrentCacheStore: TorrentCacheStore,
-    private torrentsService: TorrentsService,
-    private settingsStore: SettingsStore,
-  ) {
-    this.adapters = [ncoreAdapter, bithumenAdapter, majomparadeAdapter];
-  }
-
-  async onApplicationBootstrap() {
-    const setting = await this.settingsStore.findOneOrThrow();
-    const job = this.schedulerRegistry.getCronJob('cleanupTorrents');
-
-    if (!setting.hitAndRun) {
-      await job.stop();
-    }
-  }
+    private readonly trackerAdapterRegistry: TrackerAdapterRegistry,
+    private readonly trackerCredentialsService: TrackerCredentialsService,
+    private readonly torrentCacheStore: TorrentCacheStore,
+  ) {}
 
   async login(tracker: TrackerEnum, payload: LoginRequest): Promise<void> {
     try {
-      const adapter = this.getAdapter(tracker);
+      const adapter = this.trackerAdapterRegistry.get(tracker);
       await adapter.login(payload);
       await this.trackerCredentialsService.create({
         tracker,
@@ -95,7 +71,7 @@ export class TrackersService implements OnApplicationBootstrap {
 
     const results = await Promise.all(
       credentials.map((credential) => {
-        const adapter = this.getAdapter(credential.tracker);
+        const adapter = this.trackerAdapterRegistry.get(credential.tracker);
         return this.findTrackerTorrents(adapter, query);
       }),
     );
@@ -107,7 +83,7 @@ export class TrackersService implements OnApplicationBootstrap {
     tracker: TrackerEnum,
     torrentId: string,
   ): Promise<TrackerTorrentId> {
-    const adapter = this.getAdapter(tracker);
+    const adapter = this.trackerAdapterRegistry.get(tracker);
 
     const torrent = await adapter.findOne(torrentId);
     const torrentCache = await this.torrentCacheStore.findOne(torrent);
@@ -131,45 +107,6 @@ export class TrackersService implements OnApplicationBootstrap {
       ...torrent,
       parsed: downloaded.parsed,
     };
-  }
-
-  async setHitAndRunCron(enabled: boolean): Promise<void> {
-    const job = this.schedulerRegistry.getCronJob('cleanupTorrents');
-
-    if (enabled && !job.isActive) {
-      job.start();
-    }
-
-    if (!enabled && job.isActive) {
-      await job.stop();
-    }
-  }
-
-  @Cron(CronExpression.EVERY_DAY_AT_4AM, { name: 'cleanupTorrents' })
-  async cleanupHitAndRun(): Promise<void> {
-    const credentials = await this.trackerCredentialsService.find();
-    await Promise.all(
-      credentials.map((credential) => {
-        const adapter = this.getAdapter(credential.tracker);
-        return this.cleanupHitAndRunTracker(adapter);
-      }),
-    );
-  }
-
-  private async cleanupHitAndRunTracker(adapter: TrackerAdapter) {
-    const seedReqTorrentIds = await adapter.seedRequirement();
-    await this.torrentsService.purgeTrackerExcept(
-      adapter.tracker,
-      seedReqTorrentIds,
-    );
-  }
-
-  private getAdapter(tracker: TrackerEnum): TrackerAdapter {
-    const adapter = this.adapters.find((a) => a.tracker === tracker);
-    if (!adapter) {
-      throw new BadRequestException(`Nem regisztrált tracker: ${tracker}`);
-    }
-    return adapter;
   }
 
   private async findTrackerTorrents(

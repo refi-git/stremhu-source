@@ -18,7 +18,7 @@ import rangeParser from 'range-parser';
 import { TokenGuard } from 'src/auth/guards/token.guard';
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 
-import { StreamMediaTypeEnum } from '../enums/stream-media-type.enum';
+import { StreamMediaTypeEnum } from '../enum/stream-media-type.enum';
 import { StreamsResponseDto } from './dto/stremio-stream.dto';
 import { StreamIdPipe } from './pipe/stream-id.pipe';
 import type { ParsedStreamId } from './pipe/stream-id.pipe';

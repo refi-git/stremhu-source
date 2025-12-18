@@ -24,6 +24,9 @@ export class Setting {
   @Column({ name: 'hit_and_run', type: 'boolean', default: false })
   hitAndRun!: boolean;
 
+  @Column({ name: 'extra_seed_seconds', type: 'int', nullable: true })
+  extraSeedSeconds: number | null;
+
   @Column({ name: 'cache_retention', type: 'text', nullable: true })
   cacheRetention!: string | null;
 
