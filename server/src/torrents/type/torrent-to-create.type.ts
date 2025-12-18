@@ -1,8 +1,8 @@
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 
-export interface WebTorrentRunToCreate {
-  tracker: TrackerEnum;
-  torrentId: string;
+export type TorrentToCreate = {
   infoHash: string;
   imdbId: string;
-}
+  tracker: TrackerEnum;
+  torrentId: string;
+};

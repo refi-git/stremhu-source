@@ -7,11 +7,11 @@ import {
 import { isUUID } from 'class-validator';
 import { Request } from 'express';
 
-import { UsersService } from 'src/users/users.service';
+import { UsersStore } from 'src/users/core/users.store';
 
 @Injectable()
-export class StremioTokenGuard implements CanActivate {
-  constructor(private readonly usersService: UsersService) {}
+export class TokenGuard implements CanActivate {
+  constructor(private readonly usersStore: UsersStore) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     const req = ctx.switchToHttp().getRequest<Request>();
@@ -25,8 +25,8 @@ export class StremioTokenGuard implements CanActivate {
       );
     }
 
-    const user = await this.usersService.findOne((qb) =>
-      qb.where('stremio_token = :token', { token }),
+    const user = await this.usersStore.findOne((qb) =>
+      qb.where('user.token = :token', { token }),
     );
 
     if (!user) {

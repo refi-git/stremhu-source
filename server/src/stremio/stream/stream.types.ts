@@ -21,7 +21,6 @@ export enum RangeErrorEnum {
 export interface CalculateRange {
   rangeHeader?: string;
   total: number;
-  torrentPieceLength: number;
 }
 
 export interface CalculatedRangeDetails {
@@ -94,7 +93,7 @@ export interface PlayStream {
   imdbId: string;
   tracker: TrackerEnum;
   torrentId: string;
-  fileIdx: number;
+  fileIndex: number;
 }
 
 export interface SelectVideoOptions {

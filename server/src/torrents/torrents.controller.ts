@@ -3,21 +3,25 @@ import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { filesize } from 'filesize';
 import _ from 'lodash';
 
+import { Roles } from 'src/auth/decorators/roles.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { toDto } from 'src/common/utils/to-dto';
+import { UserRoleEnum } from 'src/users/enum/user-role.enum';
 
 import { TorrentDto } from './dto/torrent.dto';
-import { WebTorrentService } from './web-torrent.service';
+import { TorrentsService } from './torrents.service';
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(UserRoleEnum.ADMIN)
 @Controller('/torrents')
-export class WebTorrentController {
-  constructor(private readonly webTorrentService: WebTorrentService) {}
+export class TorrentsController {
+  constructor(private readonly torrentsService: TorrentsService) {}
 
   @Get('/')
   @ApiResponse({ status: 200, type: TorrentDto, isArray: true })
   async find(): Promise<TorrentDto[]> {
-    const torrents = await this.webTorrentService.getTorrents();
+    const torrents = await this.torrentsService.getTorrents();
 
     const sortedTorrents = _.orderBy(
       torrents,
@@ -50,6 +54,6 @@ export class WebTorrentController {
   @ApiParam({ name: 'infoHash', type: 'string' })
   @Delete('/:infoHash')
   async delete(@Param('infoHash') infoHash: string) {
-    await this.webTorrentService.delete(infoHash);
+    await this.torrentsService.delete(infoHash);
   }
 }

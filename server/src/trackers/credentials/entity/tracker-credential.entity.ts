@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 
@@ -12,4 +18,16 @@ export class TrackerCredential {
 
   @Column({ type: 'text' })
   password!: string;
+
+  @Column({ name: 'hit_and_run', type: 'boolean', default: false })
+  hitAndRun!: boolean;
+
+  @Column({ name: 'download_full_torrent', type: 'boolean', default: false })
+  downloadFullTorrent!: boolean;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }

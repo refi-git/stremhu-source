@@ -7,27 +7,46 @@ import {
   IsEnum,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator';
 
 import { LanguageEnum } from 'src/common/enums/language.enum';
 
-export class UpdateMePreferencesDto {
+export class UpdateMeDto {
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    type: 'string',
+    required: false,
+  })
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    type: 'string',
+    required: false,
+  })
+  password?: string;
+
+  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
   @IsEnum(Resolution, { each: true })
   @ApiProperty({ enum: Resolution, enumName: 'ResolutionEnum', isArray: true })
-  torrentResolutions: Resolution[];
+  torrentResolutions?: Resolution[];
 
+  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
   @IsEnum(LanguageEnum, { each: true })
   @ApiProperty({ enum: LanguageEnum, enumName: 'LanguageEnum', isArray: true })
-  torrentLanguages: LanguageEnum[];
+  torrentLanguages?: LanguageEnum[];
 
   @IsOptional()
   @IsNumber()
   @ApiProperty({ type: 'number', nullable: true })
-  torrentSeed: number | null;
+  torrentSeed?: number | null;
 }

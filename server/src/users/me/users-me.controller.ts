@@ -6,12 +6,10 @@ import { OptionalAuth } from 'src/auth/decorators/optional-auth.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { toDto } from 'src/common/utils/to-dto';
 
-import { ChangePasswordDto } from '../dto/change-password';
-import { ChangeUsernameDto } from '../dto/change-username';
 import { UserDto } from '../dto/user.dto';
 import { UsersService } from '../users.service';
-import { MeUserDto } from './dto/me-user.dto';
-import { UpdateMePreferencesDto } from './dto/update-me-preferences';
+import { MeDto } from './dto/me.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 @ApiTags('Me')
 @UseGuards(AuthGuard)
@@ -21,57 +19,28 @@ export class UsersMeController {
 
   @ApiResponse({
     status: 200,
-    type: MeUserDto,
+    type: MeDto,
   })
   @OptionalAuth()
   @Get('/')
-  me(@Req() req: Request): MeUserDto {
+  me(@Req() req: Request): MeDto {
     return { me: req.user ? toDto(UserDto, req.user) : null };
   }
 
   @ApiResponse({ status: 200, type: UserDto })
-  @Put('/preferences')
+  @Put('/')
   async updateMe(
     @Req() req: Request,
-    @Body() payload: UpdateMePreferencesDto,
+    @Body() payload: UpdateMeDto,
   ): Promise<UserDto> {
-    const user = await this.usersService.updateOneOrThrow(
-      req.user!.id,
-      payload,
-    );
+    const user = await this.usersService.updateOrThrow(req.user!.id, payload);
     return toDto(UserDto, user);
   }
 
   @ApiResponse({ status: 201, type: UserDto })
-  @Put('/username')
-  async changeUsername(
-    @Req() req: Request,
-    @Body() payload: ChangeUsernameDto,
-  ): Promise<UserDto> {
-    const user = await this.usersService.updateUsernameOrThrow(
-      req.user!.id,
-      payload.username,
-    );
-    return toDto(UserDto, user);
-  }
-
-  @ApiResponse({ status: 201, type: UserDto })
-  @Put('/password')
-  async changePassword(
-    @Req() req: Request,
-    @Body() payload: ChangePasswordDto,
-  ): Promise<UserDto> {
-    const user = await this.usersService.updateOneOrThrow(
-      req.user!.id,
-      payload,
-    );
-    return toDto(UserDto, user);
-  }
-
-  @ApiResponse({ status: 201, type: UserDto })
-  @Put('/stremio-token')
+  @Put('/token/regenerate')
   async changeStremioToken(@Req() req: Request): Promise<UserDto> {
-    const user = await this.usersService.regenerateStremioToken(req.user!.id);
+    const user = await this.usersService.regenerateToken(req.user!.id);
     return toDto(UserDto, user);
   }
 }

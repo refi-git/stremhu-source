@@ -8,7 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { filesize } from 'filesize';
 import isVideo from 'is-video';
 import _ from 'lodash';
-import { Torrent, TorrentFile } from 'webtorrent';
+import { TorrentFile } from 'webtorrent';
 
 import { CatalogService } from 'src/catalog/catalog.service';
 import { RESOLUTION_LABEL_MAP } from 'src/common/common.constant';
@@ -16,6 +16,8 @@ import { LanguageEnum } from 'src/common/enums/language.enum';
 import { ParsedFile } from 'src/common/utils/parse-torrent.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TorrentCacheStore } from 'src/torrent-cache/core/torrent-cache.store';
+import { TorrentsService } from 'src/torrents/torrents.service';
+import { Torrent } from 'src/torrents/type/torrent.type';
 import {
   TrackerTorrentError,
   TrackerTorrentStatusEnum,
@@ -24,7 +26,6 @@ import {
 import { TRACKER_LABEL_MAP } from 'src/trackers/trackers.constants';
 import { TrackersService } from 'src/trackers/trackers.service';
 import { User } from 'src/users/entity/user.entity';
-import { WebTorrentService } from 'src/web-torrent/web-torrent.service';
 
 import { StreamDto } from './dto/stremio-stream.dto';
 import { ParsedStreamIdSeries } from './pipe/stream-id.pipe';
@@ -51,7 +52,7 @@ export class StremioStreamService {
   constructor(
     private torrentCacheStore: TorrentCacheStore,
     private trackersService: TrackersService,
-    private webTorrentService: WebTorrentService,
+    private torrentsService: TorrentsService,
     private settingsStore: SettingsStore,
     private catalogService: CatalogService,
   ) {}
@@ -133,7 +134,7 @@ export class StremioStreamService {
       return {
         name: nameArray.join(' | '),
         description: descriptionArray.join('\n'),
-        url: `${endpoint}/api/${user.stremioToken}/stream/play/${videoFile.imdbId}/${videoFile.tracker}/${videoFile.torrentId}/${videoFile.fileIndex}`,
+        url: `${endpoint}/api/${user.token}/stream/play/${videoFile.imdbId}/${videoFile.tracker}/${videoFile.torrentId}/${videoFile.fileIndex}`,
         behaviorHints: {
           notWebReady: videoFile.notWebReady,
           bingeGroup,
@@ -147,10 +148,10 @@ export class StremioStreamService {
 
   async playStream(
     payload: PlayStream,
-  ): Promise<{ file: TorrentFile; torrent: Torrent }> {
-    const { imdbId, tracker, torrentId, fileIdx } = payload;
+  ): Promise<{ torrent: Torrent; file: TorrentFile }> {
+    const { imdbId, tracker, torrentId, fileIndex } = payload;
 
-    const key = `${imdbId}-${tracker}-${torrentId}-${fileIdx}`;
+    const key = `${imdbId}-${tracker}-${torrentId}-${fileIndex}`;
     const running = this.inFlightPlay.get(key);
     if (running) return running;
 
@@ -167,7 +168,7 @@ export class StremioStreamService {
   }
 
   private async fetchTorrent(payload: PlayStream) {
-    const { imdbId, tracker, torrentId, fileIdx } = payload;
+    const { imdbId, tracker, torrentId, fileIndex } = payload;
 
     const torrentCache = await this.torrentCacheStore.findOne({
       imdbId,
@@ -178,7 +179,7 @@ export class StremioStreamService {
     let torrent: Torrent | null = null;
 
     if (torrentCache) {
-      torrent = await this.webTorrentService.getTorrent(
+      torrent = await this.torrentsService.getTorrent(
         torrentCache.parsed.infoHash,
       );
     }
@@ -189,19 +190,22 @@ export class StremioStreamService {
         torrentId,
       );
 
-      torrent = await this.webTorrentService.getTorrent(
+      torrent = await this.torrentsService.getTorrent(
         torrentFile.parsed.infoHash,
       );
 
       if (!torrent) {
-        torrent = await this.webTorrentService.addTorrent({
+        torrent = await this.torrentsService.addTorrent({
           ...torrentFile,
-          parsed: torrentFile.parsed,
+          parsedTorrent: torrentFile.parsed,
         });
       }
     }
 
-    const file = this.webTorrentService.getFileByIndex(torrent, fileIdx);
+    const file = await this.torrentsService.getTorrentFile(
+      torrent.infoHash,
+      fileIndex,
+    );
 
     return { file, torrent };
   }

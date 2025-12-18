@@ -8,9 +8,9 @@ import { SessionsModule } from './sessions/sessions.module';
 import { SettingsModule } from './settings/settings.module';
 import { StremioModule } from './stremio/stremio.module';
 import { TorrentCacheModule } from './torrent-cache/torrent-cache.module';
+import { TorrentsModule } from './torrents/torrents.module';
 import { TrackersModule } from './trackers/trackers.module';
 import { UsersModule } from './users/users.module';
-import { WebTorrentModule } from './web-torrent/web-torrent.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { WebTorrentModule } from './web-torrent/web-torrent.module';
     UsersModule,
     MetadataModule,
     TorrentCacheModule,
-    WebTorrentModule,
+    TorrentsModule,
     TrackersModule,
     StremioModule,
     CatalogModule,

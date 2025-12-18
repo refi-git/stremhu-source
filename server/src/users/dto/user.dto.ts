@@ -31,7 +31,7 @@ export class UserDto {
 
   @IsString()
   @ApiProperty()
-  stremioToken: string;
+  token: string;
 
   @IsEnum(UserRoleEnum)
   @ApiProperty({ enum: UserRoleEnum, enumName: 'UserRoleEnum' })
