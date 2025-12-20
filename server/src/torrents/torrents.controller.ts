@@ -1,6 +1,13 @@
-import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { filesize } from 'filesize';
 import _ from 'lodash';
 
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -10,6 +17,7 @@ import { toDto } from 'src/common/utils/to-dto';
 import { UserRoleEnum } from 'src/users/enum/user-role.enum';
 
 import { TorrentDto } from './dto/torrent.dto';
+import { UpdateTorrentDto } from './dto/update-torrent.dto';
 import { TorrentsService } from './torrents.service';
 
 @UseGuards(AuthGuard, RolesGuard)
@@ -26,34 +34,32 @@ export class TorrentsController {
 
     const sortedTorrents = _.orderBy(
       torrents,
-      [(torrent) => torrent.name],
-      ['asc'],
+      [(torrent) => torrent.isPersisted, (torrent) => torrent.name],
+      ['desc', 'asc'],
     );
 
     return sortedTorrents.map((torrent) => {
-      let uploadSpeed = '-';
-
-      if (torrent.uploadSpeed !== 0) {
-        uploadSpeed = `${filesize(torrent.uploadSpeed)}/s`;
-      }
-
-      const response = {
-        tracker: torrent.tracker,
-        name: torrent.name,
-        uploadSpeed: uploadSpeed,
-        progress: `${_.floor(torrent.progress * 100, 2)}%`,
-        downloaded: filesize(torrent.downloaded),
-        uploaded: filesize(torrent.uploaded),
-        total: filesize(torrent.total),
-        infoHash: torrent.infoHash,
-      };
-
-      return toDto(TorrentDto, response);
+      return toDto(TorrentDto, torrent);
     });
   }
 
+  @Put('/:infoHash')
   @ApiParam({ name: 'infoHash', type: 'string' })
+  @ApiResponse({ status: 200, type: TorrentDto })
+  async update(
+    @Param('infoHash') infoHash: string,
+    @Body() payload: UpdateTorrentDto,
+  ): Promise<TorrentDto> {
+    const mergedTorrent = await this.torrentsService.updateOneForRest(
+      infoHash,
+      payload,
+    );
+
+    return toDto(TorrentDto, mergedTorrent);
+  }
+
   @Delete('/:infoHash')
+  @ApiParam({ name: 'infoHash', type: 'string' })
   async delete(@Param('infoHash') infoHash: string) {
     await this.torrentsService.delete(infoHash);
   }

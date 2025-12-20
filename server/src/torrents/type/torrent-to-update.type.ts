@@ -5,4 +5,5 @@ export type TorrentToUpdate = {
   tracker?: TrackerEnum;
   torrentId?: string;
   lastPlayedAt?: Date;
+  isPersisted?: boolean;
 };

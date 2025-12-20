@@ -10,20 +10,23 @@ export class TorrentDto {
   name: string;
 
   @ApiProperty()
-  uploadSpeed: string;
+  uploadSpeed: number;
 
   @ApiProperty()
-  progress: string;
+  progress: number;
 
   @ApiProperty()
-  downloaded: string;
+  downloaded: number;
 
   @ApiProperty()
-  uploaded: string;
+  uploaded: number;
 
   @ApiProperty()
-  total: string;
+  total: number;
 
   @ApiProperty()
   infoHash: string;
+
+  @ApiProperty()
+  isPersisted: boolean;
 }

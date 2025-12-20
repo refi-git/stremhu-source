@@ -12,6 +12,7 @@ export type MergedTorrent = {
   imdbId: string;
   tracker: TrackerEnum;
   torrentId: string;
+  isPersisted: boolean;
 
   updatedAt: Date;
   createdAt: Date;

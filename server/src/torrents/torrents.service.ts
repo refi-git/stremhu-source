@@ -110,19 +110,6 @@ export class TorrentsService
     return torrent;
   }
 
-  async updateOneOrThrow(infoHash: string, payload: TorrentToUpdate) {
-    const torrent = await this.getTorrentOrThrow(infoHash);
-
-    const updateData = omitBy(payload, isUndefined);
-
-    const updatedTorrent = this.torrentsStore.updateOne({
-      ...torrent,
-      ...updateData,
-    });
-
-    return updatedTorrent;
-  }
-
   async getTorrents(): Promise<MergedTorrent[]> {
     const torrents = await this.torrentsStore.find();
     const clientTorrents = this.torrentClient.getTorrents();
@@ -156,6 +143,31 @@ export class TorrentsService
     ]);
 
     if (!torrent || !clientTorrent) return null;
+
+    return this.mergeTorrentEntityWithTorrentClient(torrent, clientTorrent);
+  }
+
+  async updateOneOrThrow(
+    infoHash: string,
+    payload: TorrentToUpdate,
+  ): Promise<Torrent> {
+    const torrent = await this.getTorrentOrThrow(infoHash);
+
+    const updateData = omitBy(payload, isUndefined);
+
+    const updatedTorrent = this.torrentsStore.updateOne({
+      ...torrent,
+      ...updateData,
+    });
+
+    return updatedTorrent;
+  }
+
+  async updateOneForRest(infoHash: string, payload: TorrentToUpdate) {
+    const torrent = await this.updateOneOrThrow(infoHash, payload);
+    const clientTorrent = await this.getTorrentForStreamOrThrow(
+      torrent.infoHash,
+    );
 
     return this.mergeTorrentEntityWithTorrentClient(torrent, clientTorrent);
   }
@@ -244,6 +256,18 @@ export class TorrentsService
     return webTorrentTorrent;
   }
 
+  async getTorrentForStreamOrThrow(
+    infoHash: string,
+  ): Promise<WebTorrentTorrent> {
+    const clientTorrent = await this.getTorrentForStream(infoHash);
+
+    if (!clientTorrent) {
+      throw new NotFoundException(`A(z) "${infoHash}" torrent nem található.`);
+    }
+
+    return clientTorrent;
+  }
+
   async addTorrentForStream(
     payload: TorrentToAddClient,
   ): Promise<WebTorrentTorrent> {
@@ -284,6 +308,7 @@ export class TorrentsService
       tracker: torrentEntity.tracker,
       torrentId: torrentEntity.torrentId,
       infoHash: torrentEntity.infoHash,
+      isPersisted: torrentEntity.isPersisted,
       downloaded: webTorrentTorrent.downloaded,
       progress: webTorrentTorrent.progress,
       total: webTorrentTorrent.length,

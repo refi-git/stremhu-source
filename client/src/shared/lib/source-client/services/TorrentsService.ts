@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TorrentDto } from '../models/TorrentDto';
+import type { UpdateTorrentDto } from '../models/UpdateTorrentDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class TorrentsService {
@@ -15,6 +16,26 @@ export class TorrentsService {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/torrents',
+        });
+    }
+    /**
+     * @param infoHash
+     * @param requestBody
+     * @returns TorrentDto
+     * @throws ApiError
+     */
+    public update(
+        infoHash: string,
+        requestBody: UpdateTorrentDto,
+    ): CancelablePromise<TorrentDto> {
+        return this.httpRequest.request({
+            method: 'PUT',
+            url: '/api/torrents/{infoHash}',
+            path: {
+                'infoHash': infoHash,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
         });
     }
     /**
