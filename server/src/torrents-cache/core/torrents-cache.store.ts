@@ -2,10 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import _ from 'lodash';
 import { Dirent } from 'node:fs';
-import { mkdir, readFile, rm, stat, utimes, writeFile } from 'node:fs/promises';
+import { mkdir, rm, stat, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { safeReaddir } from 'src/common/utils/file.util';
+import { safeReadFile, safeReaddir } from 'src/common/utils/file.util';
 import {
   ParsedTorrent,
   parseTorrent,
@@ -72,21 +72,21 @@ export class TorrentsCacheStore implements OnModuleInit {
       await this.touchMarker(trackerDirPath);
     }
 
-    const parsedTorrents: TorrentCache[] = await Promise.all(
-      torrentDirents.map(async (torrentDirent): Promise<TorrentCache> => {
-        const [torrentId] = torrentDirent.name.split('.');
+    const parsedTorrents: TorrentCache[] = [];
 
-        const path = join(trackerDirPath, torrentDirent.name);
-        const parsed = await this.fileToParseTorrent(path);
+    for (const torrentDirent of torrentDirents) {
+      const [torrentId] = torrentDirent.name.split('.');
 
-        return {
-          ...payload,
-          torrentId,
-          path,
-          parsed,
-        };
-      }),
-    );
+      const path = join(trackerDirPath, torrentDirent.name);
+      const parsed = await this.fileToParseTorrent(path);
+
+      if (!parsed) {
+        this.logger.error(`🚨 A(z) "${path}" nem található.`);
+        continue;
+      }
+
+      parsedTorrents.push({ ...payload, torrentId, path, parsed });
+    }
 
     return parsedTorrents;
   }
@@ -99,6 +99,10 @@ export class TorrentsCacheStore implements OnModuleInit {
     );
 
     const parsed = await this.fileToParseTorrent(torrentFilePath);
+
+    if (!parsed) {
+      return null;
+    }
 
     return {
       ...payload,
@@ -160,8 +164,13 @@ export class TorrentsCacheStore implements OnModuleInit {
 
   private async fileToParseTorrent(
     torrentPath: string,
-  ): Promise<ParsedTorrent> {
-    const fileBuffer = await readFile(torrentPath);
+  ): Promise<ParsedTorrent | null> {
+    const fileBuffer = await safeReadFile(torrentPath);
+
+    if (!fileBuffer) {
+      return null;
+    }
+
     const parsedTorrent = await parseTorrent(new Uint8Array(fileBuffer));
     return parsedTorrent;
   }

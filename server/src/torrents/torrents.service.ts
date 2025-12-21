@@ -71,7 +71,7 @@ export class TorrentsService
       });
 
       if (!torrentCache) {
-        this.logger.error(`❌ "${torrent.infoHash}" nem tölthető vissza.`);
+        this.logger.error(`🚨 "${torrent.infoHash}" nem tölthető vissza.`);
         await this.torrentsStore.removeByInfoHash(torrent.infoHash);
         continue;
       }
