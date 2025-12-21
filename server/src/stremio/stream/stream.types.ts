@@ -77,7 +77,7 @@ export interface VideoFileWithRank {
   language: VideoFileLanguage;
   videoCodec?: VideoCodecEnum;
   audioCodec?: AudioCodecEnum;
-  isHDR: boolean;
+  hdrTypes: string[];
   sources: SourceEnum[];
   notWebReady: boolean;
 }

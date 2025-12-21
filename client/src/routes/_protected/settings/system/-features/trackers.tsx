@@ -57,8 +57,7 @@ export function Trackers() {
       <CardHeader>
         <CardTitle>Trackerek</CardTitle>
         <CardDescription>
-          Az addon használatához meg kell adnom a bejelentkezési adataidat az
-          egyik támogatott tracker-be.
+          Kezeld a tracker-eket és módosítsd a konfigurációit.
         </CardDescription>
         {renderTrackerLogin && (
           <CardAction>
