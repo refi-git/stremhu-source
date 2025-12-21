@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from '../../shared/components/ui/tooltip'
 import { networkAccessDefaultValues } from './network-access.defaults'
+import type { ConnectionType } from './network-access.types'
 
 const addressMap = {
   ip: {
@@ -55,8 +56,12 @@ const networkCheckMap = {
 }
 
 export const UrlConfiguration = withForm({
+  props: {
+    // These props are also set as default values for the `render` function
+    connection: 'idle' as ConnectionType,
+  },
   defaultValues: networkAccessDefaultValues,
-  render: ({ form }) => {
+  render: ({ form, connection }) => {
     const { data: setting } = useQuery(getSettings)
     assertExists(setting)
 
@@ -74,36 +79,30 @@ export const UrlConfiguration = withForm({
                     {addressMap[networkConfig].description}
                   </ItemDescription>
                 </ItemContent>
-                <form.Subscribe selector={(state) => [state.values.connection]}>
-                  {([connection]) =>
-                    connection !== 'idle' && (
-                      <ItemActions>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant={
-                                connection === 'error'
-                                  ? 'destructive'
-                                  : 'default'
-                              }
-                              size="icon-sm"
-                              className={clsx([
-                                'rounded-full',
-                                connection === 'success' &&
-                                  'bg-green-500 text-white',
-                              ])}
-                            >
-                              {networkCheckMap[connection].icon}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{networkCheckMap[connection].title}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </ItemActions>
-                    )
-                  }
-                </form.Subscribe>
+                {connection !== 'idle' && (
+                  <ItemActions>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant={
+                            connection === 'error' ? 'destructive' : 'default'
+                          }
+                          size="icon-sm"
+                          className={clsx([
+                            'rounded-full',
+                            connection === 'success' &&
+                              'bg-green-500 text-white',
+                          ])}
+                        >
+                          {networkCheckMap[connection].icon}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{networkCheckMap[connection].title}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </ItemActions>
+                )}
               </Item>
 
               <form.Field name="address">

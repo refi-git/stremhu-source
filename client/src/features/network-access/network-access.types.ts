@@ -3,7 +3,8 @@ export type NetworkAccessDialog = {
 }
 
 export type NetworkAccessDefaultValues = {
-  connection: 'idle' | 'pending' | 'success' | 'error'
   enebledlocalIp: boolean
   address: string
 }
+
+export type ConnectionType = 'idle' | 'pending' | 'success' | 'error'

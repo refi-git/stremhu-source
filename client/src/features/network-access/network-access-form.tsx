@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Address4 } from 'ip-address'
+import { useState } from 'react'
 import type { FormEventHandler } from 'react'
 import { toast } from 'sonner'
 import * as z from 'zod'
@@ -12,6 +13,7 @@ import { getSettings, useUpdateSetting } from '@/shared/queries/settings'
 
 import { Separator } from '../../shared/components/ui/separator'
 import { networkAccessDefaultValues } from './network-access.defaults'
+import type { ConnectionType } from './network-access.types'
 import { NetworkSelector } from './network-selector'
 import { UrlConfiguration } from './url-configuration'
 
@@ -26,7 +28,6 @@ export const NETWORK_ACCESS_HEADER = {
 
 const schema = z
   .object({
-    connection: z.enum(['idle', 'pending', 'success', 'error']),
     enebledlocalIp: z.boolean(),
     address: z.string().trim(),
   })
@@ -89,6 +90,8 @@ export function NetworkAccess(props: NetworkAccessProps) {
   const { data: setting } = useQuery(getSettings)
   assertExists(setting)
 
+  const [connection, setConnection] = useState<ConnectionType>('idle')
+
   const { confirm } = useConfirmDialog()
 
   const queryClient = useQueryClient()
@@ -124,13 +127,13 @@ export function NetworkAccess(props: NetworkAccessProps) {
 
         try {
           if (onValidated) onValidated(false)
-          formApi.setFieldValue('connection', 'pending')
+          setConnection('pending')
           await updateSetting({ enebledlocalIp })
           await queryClient.fetchQuery(getHealth(appUrl))
-          formApi.setFieldValue('connection', 'success')
+          setConnection('success')
           if (onValidated) onValidated(true)
         } catch (error) {
-          formApi.setFieldValue('connection', 'error')
+          setConnection('error')
           if (onValidated) onValidated(false)
         }
       },
@@ -153,13 +156,13 @@ export function NetworkAccess(props: NetworkAccessProps) {
 
         try {
           if (onValidated) onValidated(false)
-          formApi.setFieldValue('connection', 'pending')
+          setConnection('pending')
           await updateSetting({ enebledlocalIp })
           await queryClient.fetchQuery(getHealth(appUrl))
-          formApi.setFieldValue('connection', 'success')
+          setConnection('success')
           if (onValidated) onValidated(true)
         } catch (error) {
-          formApi.setFieldValue('connection', 'error')
+          setConnection('error')
           if (onValidated) onValidated(false)
         }
       },
@@ -225,7 +228,7 @@ export function NetworkAccess(props: NetworkAccessProps) {
       >
         <NetworkSelector form={form} />
         <Separator />
-        <UrlConfiguration form={form} />
+        <UrlConfiguration form={form} connection={connection} />
       </form>
     </form.AppForm>
   )
