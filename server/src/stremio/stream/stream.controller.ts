@@ -142,7 +142,7 @@ export class StremioStreamController {
       }
 
       this.logger.error(
-        `❌ Stream hibára futott: ${err.message}, ${JSON.stringify(err)}`,
+        `🚨 Stream hibára futott: ${err.message}, ${JSON.stringify(err)}`,
       );
     });
   }
