@@ -1,5 +1,5 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { rm } from 'node:fs/promises';
 
 import { SettingsStore } from 'src/settings/core/settings.store';
@@ -9,36 +9,14 @@ import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 import { TorrentsCacheStore } from './core/torrents-cache.store';
 
 @Injectable()
-export class TorrentsCacheService implements OnApplicationBootstrap {
+export class TorrentsCacheService {
   private readonly logger = new Logger(TorrentsCacheService.name);
 
   constructor(
-    private readonly schedulerRegistry: SchedulerRegistry,
     private readonly torrentsCacheStore: TorrentsCacheStore,
     private readonly settingsStore: SettingsStore,
     private readonly torrentsService: TorrentsService,
   ) {}
-
-  async onApplicationBootstrap() {
-    const setting = await this.settingsStore.findOneOrThrow();
-    const job = this.schedulerRegistry.getCronJob('retentionCleanup');
-
-    if (!setting.cacheRetentionSeconds) {
-      await job.stop();
-    }
-  }
-
-  async setRetentionCleanupCron(enabled: boolean) {
-    const job = this.schedulerRegistry.getCronJob('retentionCleanup');
-
-    if (enabled && !job.isActive) {
-      job.start();
-    }
-
-    if (!enabled && job.isActive) {
-      await job.stop();
-    }
-  }
 
   async deleteAllByTracker(tracker: TrackerEnum) {
     const activeTorrents = await this.torrentsService.getTorrents();
@@ -89,7 +67,7 @@ export class TorrentsCacheService implements OnApplicationBootstrap {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_5AM, { name: 'retentionCleanup' })
+  @Cron(CronExpression.EVERY_DAY_AT_5AM)
   async runRetentionCleanup(retentionSeconds?: number) {
     let cacheRetentionSeconds = retentionSeconds ?? null;
 
