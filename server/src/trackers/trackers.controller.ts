@@ -6,6 +6,7 @@ import {
   Param,
   ParseEnumPipe,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -21,6 +22,7 @@ import { UserRoleEnum } from 'src/users/enum/user-role.enum';
 import { TrackersStore } from './core/trackers.store';
 import { LoginTrackerDto } from './dto/login-tracker.dto';
 import { TrackerDto } from './dto/tracker.dto';
+import { UpdateTrackerDto } from './dto/update-tracker.dto';
 import { TrackerMaintenanceService } from './tracker-maintenance.service';
 
 @UseGuards(AuthGuard, RolesGuard)
@@ -36,7 +38,7 @@ export class TrackersController {
 
   @ApiResponse({ status: 201 })
   @Post('/')
-  async loginTracker(@Body() body: LoginTrackerDto) {
+  async login(@Body() body: LoginTrackerDto) {
     const { tracker, ...rest } = body;
     await this.trackersService.login(tracker, rest);
   }
@@ -61,8 +63,26 @@ export class TrackersController {
     enum: TrackerEnum,
   })
   @ApiResponse({ status: 200 })
+  @Put('/:tracker')
+  async update(
+    @Param('tracker', new ParseEnumPipe(TrackerEnum)) tracker: TrackerEnum,
+    @Body() payload: UpdateTrackerDto,
+  ): Promise<TrackerDto> {
+    const updatedItem = await this.trackersService.updateOneOrThrow(
+      tracker,
+      payload,
+    );
+
+    return toDto(TrackerDto, updatedItem);
+  }
+
+  @ApiParam({
+    name: 'tracker',
+    enum: TrackerEnum,
+  })
+  @ApiResponse({ status: 200 })
   @Delete('/:tracker')
-  async deleteTracker(
+  async delete(
     @Param('tracker', new ParseEnumPipe(TrackerEnum)) tracker: TrackerEnum,
   ) {
     await this.trackersService.delete(tracker);

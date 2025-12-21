@@ -28,7 +28,7 @@ import {
   ItemTitle,
 } from '@/shared/components/ui/item'
 import { Separator } from '@/shared/components/ui/separator'
-import { useMetadataLabel } from '@/shared/hooks/use-metadata-label'
+import { useMetadata } from '@/shared/hooks/use-metadata'
 import { assertExists, parseApiError } from '@/shared/lib/utils'
 import { getMe, useRegenerateMeToken } from '@/shared/queries/me'
 
@@ -36,7 +36,7 @@ export function LoginAndSecurity() {
   const { data: me } = useQuery(getMe)
   assertExists(me)
 
-  const { getUserRoleLabel } = useMetadataLabel()
+  const { getUserRoleLabel } = useMetadata()
   const dialogs = useDialogs()
 
   const confirmDialog = useConfirmDialog()

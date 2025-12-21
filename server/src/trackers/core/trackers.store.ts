@@ -68,6 +68,14 @@ export class TrackersStore {
     });
   }
 
+  async updateOne(payload: Tracker, manager?: EntityManager) {
+    const repository = this.getRepository(manager);
+
+    const item = await repository.save(payload);
+
+    return item;
+  }
+
   async remove(entity: Tracker, manager?: EntityManager): Promise<Tracker> {
     const repository = this.getRepository(manager);
     await repository.remove(entity);

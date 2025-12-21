@@ -2,15 +2,16 @@ import { useQuery } from '@tanstack/react-query'
 import {
   CircleCheckBigIcon,
   DownloadIcon,
-  MoveVerticalIcon,
+  PenIcon,
   TimerIcon,
   TrashIcon,
 } from 'lucide-react'
 import { useMemo } from 'react'
-import type { MouseEventHandler } from 'react'
+import type { JSX, MouseEventHandler } from 'react'
 import { toast } from 'sonner'
 
 import { useConfirmDialog } from '@/features/confirm/use-confirm-dialog'
+import { useDialogs } from '@/routes/-features/dialogs/dialogs-store'
 import { Badge } from '@/shared/components/ui/badge'
 import { Button } from '@/shared/components/ui/button'
 import {
@@ -21,7 +22,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/shared/components/ui/item'
-import { useMetadataLabel } from '@/shared/hooks/use-metadata-label'
+import { useMetadata } from '@/shared/hooks/use-metadata'
 import type { TrackerDto } from '@/shared/lib/source-client'
 import { assertExists, parseApiError } from '@/shared/lib/utils'
 import { getSettings } from '@/shared/queries/settings'
@@ -37,11 +38,24 @@ export function TrackerItem(props: Tracker) {
 
   const { tracker } = props
 
+  const dialogs = useDialogs()
   const confirmDialog = useConfirmDialog()
 
-  const { getTrackerLabel } = useMetadataLabel()
+  const { getTrackerLabel } = useMetadata()
 
   const { mutateAsync: deleteTracker } = useDeleteTracker()
+
+  const handleEditTracker: MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    dialogs.openDialog({
+      type: 'EDIT_TRACKER',
+      options: {
+        tracker,
+      },
+    })
+  }
 
   const handleDeleteTracker: MouseEventHandler<HTMLButtonElement> = async (
     e,
@@ -64,14 +78,36 @@ export function TrackerItem(props: Tracker) {
     })
   }
 
-  const keepSeedDays = useMemo(() => {
-    if (setting.keepSeedSeconds) {
-      const days = setting.keepSeedSeconds / (24 * 60 * 60)
-      return `${days}`
+  const tags = useMemo(() => {
+    const items: Array<{ label: string; icon: JSX.Element }> = []
+
+    let hitAndRun = setting.hitAndRun
+
+    if (tracker.hitAndRun !== null) {
+      hitAndRun = tracker.hitAndRun
     }
 
-    return null
-  }, [setting.keepSeedSeconds])
+    if (hitAndRun) {
+      items.push({ label: `Hit'n'Run`, icon: <CircleCheckBigIcon /> })
+    }
+
+    let keepSeedSeconds = setting.keepSeedSeconds
+
+    if (tracker.keepSeedSeconds !== null) {
+      keepSeedSeconds = tracker.keepSeedSeconds
+    }
+
+    if (keepSeedSeconds) {
+      const days = keepSeedSeconds / (24 * 60 * 60)
+      items.push({ label: `${days} nap seedben`, icon: <TimerIcon /> })
+    }
+
+    if (tracker.downloadFullTorrent) {
+      items.push({ label: `Teljes letöltés`, icon: <DownloadIcon /> })
+    }
+
+    return items
+  }, [setting, tracker])
 
   return (
     <Item variant="muted">
@@ -84,30 +120,24 @@ export function TrackerItem(props: Tracker) {
           Bejelentkezve <span className="font-bold">{tracker.username}</span>{' '}
           felhasználóval.
         </ItemDescription>
-        <div className="flex flex-wrap gap-2">
-          {setting.hitAndRun && (
-            <Badge variant="secondary">
-              <CircleCheckBigIcon />
-              Hit'n'Run
-            </Badge>
-          )}
-          {keepSeedDays && (
-            <Badge variant="secondary">
-              <TimerIcon />
-              {keepSeedDays} nap seedben
-            </Badge>
-          )}
-          {tracker.downloadFullTorrent && (
-            <Badge variant="secondary">
-              <DownloadIcon />
-              Teljes letöltés
-            </Badge>
-          )}
-        </div>
+        {tags.length !== 0 && (
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Badge key={tag.label} variant="secondary">
+                {tag.icon}
+                {tag.label}
+              </Badge>
+            ))}
+          </div>
+        )}
       </ItemContent>
       <ItemActions>
-        <Button size="icon-sm" className="rounded-full">
-          <MoveVerticalIcon />
+        <Button
+          size="icon-sm"
+          className="rounded-full"
+          onClick={handleEditTracker}
+        >
+          <PenIcon />
         </Button>
         <Button
           size="icon-sm"

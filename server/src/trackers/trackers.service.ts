@@ -2,8 +2,10 @@ import {
   BadRequestException,
   HttpException,
   Injectable,
+  NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
+import { isUndefined, omitBy } from 'lodash';
 import { EntityManager } from 'typeorm';
 
 import { TorrentsCacheService } from 'src/torrents-cache/torrents-cache.service';
@@ -14,6 +16,7 @@ import { TrackerEnum } from './enum/tracker.enum';
 import { TrackerAdapterRegistry } from './tracker-adapter.registry';
 import { LoginRequest } from './tracker.types';
 import { LOGIN_ERROR_MESSAGE, TRACKER_INFO } from './trackers.constants';
+import { TrackerToUpdate } from './type/tracker-to-update';
 
 @Injectable()
 export class TrackersService {
@@ -58,6 +61,29 @@ export class TrackersService {
         `Bejelentkezés közben hiba történt, próbáld újra!`,
       );
     }
+  }
+
+  async findOneOrThrow(tracker: TrackerEnum) {
+    const item = await this.trackersStore.findOneByTracker(tracker);
+
+    if (!item) {
+      throw new NotFoundException(`A(z) "${tracker}" nem található.`);
+    }
+
+    return item;
+  }
+
+  async updateOneOrThrow(tracker: TrackerEnum, payload: TrackerToUpdate) {
+    const item = await this.findOneOrThrow(tracker);
+
+    const updateData = omitBy(payload, isUndefined);
+
+    const updatedTorrent = this.trackersStore.updateOne({
+      ...item,
+      ...updateData,
+    });
+
+    return updatedTorrent;
   }
 
   async delete(tracker: TrackerEnum, manager?: EntityManager): Promise<void> {

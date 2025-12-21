@@ -1,7 +1,6 @@
 import { useForm } from '@tanstack/react-form'
 import { useQuery } from '@tanstack/react-query'
 import { isEmpty } from 'lodash'
-import { TimerIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
 import * as z from 'zod'
@@ -152,9 +151,6 @@ export function KeepSeeding() {
                       }
                     }}
                   />
-                  <InputGroupAddon>
-                    <TimerIcon />
-                  </InputGroupAddon>
                   <InputGroupAddon align="inline-end">
                     <InputGroupText>nap</InputGroupText>
                   </InputGroupAddon>

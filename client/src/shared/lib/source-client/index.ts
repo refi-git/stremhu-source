@@ -37,6 +37,7 @@ export type { TrackerMetaDto } from './models/TrackerMetaDto';
 export type { UpdateMeDto } from './models/UpdateMeDto';
 export type { UpdateSettingDto } from './models/UpdateSettingDto';
 export type { UpdateTorrentDto } from './models/UpdateTorrentDto';
+export type { UpdateTrackerDto } from './models/UpdateTrackerDto';
 export type { UpdateUserDto } from './models/UpdateUserDto';
 export type { UserDto } from './models/UserDto';
 export type { UserRoleDto } from './models/UserRoleDto';

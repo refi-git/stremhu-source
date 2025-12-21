@@ -20,7 +20,7 @@ import {
   ItemTitle,
 } from '@/shared/components/ui/item'
 import { Toggle } from '@/shared/components/ui/toggle'
-import { useMetadataLabel } from '@/shared/hooks/use-metadata-label'
+import { useMetadata } from '@/shared/hooks/use-metadata'
 import type { TorrentDto } from '@/shared/lib/source-client'
 import { parseApiError } from '@/shared/lib/utils'
 import { useDeleteTorrent, useUpdateTorrent } from '@/shared/queries/torrents'
@@ -48,7 +48,7 @@ function TorrentDetail(props: TorrentDetailProps) {
 export function Torrent(props: TorrentProps) {
   const { torrent } = props
 
-  const { getTrackerLabel } = useMetadataLabel()
+  const { getTrackerLabel } = useMetadata()
 
   const confirmDialog = useConfirmDialog()
 

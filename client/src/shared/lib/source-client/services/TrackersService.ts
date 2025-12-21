@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { LoginTrackerDto } from '../models/LoginTrackerDto';
 import type { TrackerDto } from '../models/TrackerDto';
+import type { UpdateTrackerDto } from '../models/UpdateTrackerDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 export class TrackersService {
@@ -13,7 +14,7 @@ export class TrackersService {
      * @returns any
      * @throws ApiError
      */
-    public loginTracker(
+    public login(
         requestBody: LoginTrackerDto,
     ): CancelablePromise<any> {
         return this.httpRequest.request({
@@ -45,10 +46,30 @@ export class TrackersService {
     }
     /**
      * @param tracker
+     * @param requestBody
      * @returns any
      * @throws ApiError
      */
-    public deleteTracker(
+    public update(
+        tracker: 'ncore' | 'bithumen' | 'majomparade',
+        requestBody: UpdateTrackerDto,
+    ): CancelablePromise<any> {
+        return this.httpRequest.request({
+            method: 'PUT',
+            url: '/api/trackers/{tracker}',
+            path: {
+                'tracker': tracker,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
+    /**
+     * @param tracker
+     * @returns any
+     * @throws ApiError
+     */
+    public delete(
         tracker: 'ncore' | 'bithumen' | 'majomparade',
     ): CancelablePromise<any> {
         return this.httpRequest.request({

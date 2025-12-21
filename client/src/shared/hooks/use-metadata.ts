@@ -8,7 +8,7 @@ import type {
 } from '@/shared/lib/source-client'
 import { getMetadata } from '@/shared/queries/metadata'
 
-export function useMetadataLabel() {
+export function useMetadata() {
   const { data: metadata } = useQuery(getMetadata)
   if (!metadata) throw new Error(`Nincs "metadata" a cache-ben`)
 
@@ -36,10 +36,16 @@ export function useMetadataLabel() {
     return found!.label
   }
 
+  const getTrackerFullDownload = (trackerEnum: TrackerEnum) => {
+    const found = trackers.find((tracker) => tracker.value === trackerEnum)
+    return found!.requiresFullDownload
+  }
+
   return {
     getUserRoleLabel,
     getLanguageLabel,
     getResolutionLabel,
     getTrackerLabel,
+    getTrackerFullDownload,
   }
 }

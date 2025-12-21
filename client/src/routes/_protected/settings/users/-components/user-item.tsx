@@ -18,7 +18,7 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip'
 import { useIntegrationDomain } from '@/shared/hooks/use-integration-domain'
-import { useMetadataLabel } from '@/shared/hooks/use-metadata-label'
+import { useMetadata } from '@/shared/hooks/use-metadata'
 import type { UserDto } from '@/shared/lib/source-client'
 import { useDeleteUser } from '@/shared/queries/users'
 
@@ -36,7 +36,7 @@ export function UserItem(props: UserItem) {
     token: user.token,
   })
 
-  const { getUserRoleLabel } = useMetadataLabel()
+  const { getUserRoleLabel } = useMetadata()
   const { mutateAsync: deleteUser } = useDeleteUser()
 
   const handleCopyUrl = async (event: MouseEvent<HTMLButtonElement>) => {
