@@ -80,12 +80,19 @@ export class TorrentsService
         (tracker) => tracker.tracker === torrent.tracker,
       );
 
-      const clientTorrent = await this.torrentClient.addTorrent({
-        parsedTorrent: torrentCache.parsed,
-        downloadFullTorrent: tracker?.downloadFullTorrent ?? false,
-      });
-
-      this.logger.log(`🔼 .torrent fájl betöltve: ${clientTorrent.name}`);
+      this.torrentClient
+        .addTorrent({
+          parsedTorrent: torrentCache.parsed,
+          downloadFullTorrent: tracker?.downloadFullTorrent ?? false,
+        })
+        .then((clientTorrent) => {
+          this.logger.log(`🔼 .torrent fájl betöltve: ${clientTorrent.name}`);
+        })
+        .catch(() => {
+          this.logger.error(
+            `🚨 .torrent fájl betöltése közben hiba történt: ${torrentCache.parsed.name}`,
+          );
+        });
     }
   }
 
