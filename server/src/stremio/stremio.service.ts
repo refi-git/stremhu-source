@@ -29,7 +29,7 @@ export class StremioService {
 
     let id = 'hu.stremhu-source.addon';
     let validVersion = semver.clean(version);
-    let name = 'StremHU | Source';
+    let name = 'StremHU Source';
 
     if (nodeEnv !== NodeEnvEnum.PRODUCTION) {
       id = `${id}.dev`;

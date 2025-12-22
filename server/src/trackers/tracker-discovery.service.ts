@@ -34,7 +34,7 @@ export class TrackerDiscoveryService {
         {
           status: TrackerTorrentStatusEnum.ERROR,
           message:
-            '[StremHU | Source] Használat előtt konfigurálnod kell tracker bejelentkezést.',
+            '[StremHU Source] Használat előtt konfigurálnod kell tracker bejelentkezést.',
         },
       ];
     }

@@ -16,3 +16,10 @@ export function getTrackerCredentialErrorMessage(tracker: TrackerEnum): string {
 export function getTrackerStructureErrorMessage(tracker: TrackerEnum): string {
   return `${TRACKER_INFO[tracker].label} nem érhető el vagy megváltozott a strúktúrája.`;
 }
+
+export function getTrackerTorrentDownloadErrorMessage(
+  tracker: TrackerEnum,
+  torrentId: string,
+): string {
+  return `🚨 Hiba történt a(z) "[${TRACKER_INFO[tracker].label}] - ${torrentId}" torrent letöltése közben.`;
+}

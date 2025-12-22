@@ -1,15 +1,15 @@
-## StremHU | Source beüzemelése otthon
+## StremHU Source beüzemelése otthon
 
-Lépésről lépésre útmutató, hogy otthon, a helyi hálózatodon tudd használni a StremHU | Source-ot.
+Lépésről lépésre útmutató, hogy otthon, a helyi hálózatodon tudd használni a StremHU Source-ot.
 
 ### Mit érünk el a végére?
 
-- A StremHU | Source egy Docker konténerként fog futni a gépen/NAS-on.
+- A StremHU Source egy Docker konténerként fog futni a gépen/NAS-on.
 - Csak az otthoni hálózatodon lesz elérhető.
 - A Stremio-ban hozzá tudod adni, mint kiegészítőt.
 
 > [!NOTE]
-> Ha azt szeretnéd, hogy az internetről is elérhető legyen (pl. mobilnetről), arról egy külön útmutató szól: ["StremHU | Source elérése az internetről"](./stremhu-source-elerese-az-internetrol.md)
+> Ha azt szeretnéd, hogy az internetről is elérhető legyen (pl. mobilnetről), arról egy külön útmutató szól: ["StremHU Source elérése az internetről"](./stremhu-source-elerese-az-internetrol.md)
 
 ---
 
@@ -18,13 +18,13 @@ Lépésről lépésre útmutató, hogy otthon, a helyi hálózatodon tudd haszn�
 - Egy számítógép vagy NAS, amin fut a Docker.
   (pl. Docker Desktop Windows/Mac-en, vagy Container Manager Synology-n).
 - Egy Stremio fiók és a Stremio alkalmazás - [https://www.stremio.com](https://www.stremio.com).
-- StremHU | Source által támogatott tracker hozzáférés.
+- StremHU Source által támogatott tracker hozzáférés.
 
 ---
 
-### 2. Külön mappa létrehozása a StremHU | Source számára
+### 2. Külön mappa létrehozása a StremHU Source számára
 
-Először hozz létre egy mappát, ahova a StremHU | Source „csomagja” kerül.
+Először hozz létre egy mappát, ahova a StremHU Source „csomagja” kerül.
 
 - Windows-on például:
   `C:\stremhu-source`
@@ -69,7 +69,7 @@ networks:
 
 ---
 
-### 4. A StremHU | Source elindítása Docker Compose-szal
+### 4. A StremHU Source elindítása Docker Compose-szal
 
 - Windows: Start menü → „PowerShell” vagy „Parancssor”
 - Mac: „Terminal” alkalmazás
@@ -89,7 +89,7 @@ networks:
    cd ~/stremhu-source
    ```
 
-2. Indítsd el a StremHU | Source-ot a következő paranccsal:
+2. Indítsd el a StremHU Source-ot a következő paranccsal:
 
 ```bash
    docker compose up -d
@@ -119,7 +119,7 @@ Példák:
 
 Mit kell látnod?
 
-- A StremHU | Source felületét.
+- A StremHU Source felületét.
 - Első indításkor admin fiókot kell létrehozni.
 
 ---
@@ -132,11 +132,11 @@ Mit kell látnod?
   - A `Hozzáférés otthoni hálózaton` legyen kiválaszva.
   - Ha az IP címed a `192.168.1.100` akkor következőképpen töltsd ki az `Addon URL`-t: `https://192-168-1-100.local-ip.medicmobile.org:3443` - Ezen az URL-en az addon felülete is elérhető.
 
-Ezzel azt érted el, hogy a StremHU | Source ezzel az URL-el rendelkező információkat küld majd a Stremio-nak, amit el is fog fogadni.
+Ezzel azt érted el, hogy a StremHU Source ezzel az URL-el rendelkező információkat küld majd a Stremio-nak, amit el is fog fogadni.
 
 ---
 
-### 7. StremHU | Source hozzáadása a Stremio-hoz
+### 7. StremHU Source hozzáadása a Stremio-hoz
 
 Nincs más dolgod, mint a `Fiókom` menüpontban a Stremio integráció a `Stremio integráció` résznél választani egy lehetőséget.
 

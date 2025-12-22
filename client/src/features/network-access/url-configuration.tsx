@@ -30,13 +30,13 @@ const addressMap = {
     label: 'Eszköz IPv4 címe',
     placeholder: 'Pl.: 192.168.1.100',
     description:
-      'Annak az eszköznek a helyi IP címe, ahol a StremHU | Source fut.',
+      'Annak az eszköznek a helyi IP címe, ahol a StremHU Source fut.',
   },
   domain: {
     label: 'Domain cím',
     placeholder: 'Pl.: https://stremhu.yourdomain.com',
     description:
-      'Olyan domain, amely a StremHU | Source-ot futtató eszközre irányít, és HTTPS-en keresztül érhető el.',
+      'Olyan domain, amely a StremHU Source-ot futtató eszközre irányít, és HTTPS-en keresztül érhető el.',
   },
 }
 

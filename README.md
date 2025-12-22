@@ -1,4 +1,4 @@
-## StremHU | Source
+## StremHU Source
 
 ⭐ Ha tetszik, adj egy csillagot!
 
@@ -7,7 +7,7 @@
 
 Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakról** streamelhetsz.
 
-![A StremHU | Source által betöltött torrentek a Stremio felületén.](./docs/assets/stremio-stremhu-source-list.png)
+![A StremHU Source által betöltött torrentek a Stremio felületén.](./docs/assets/stremio-stremhu-source-list.png)
 
 > [!NOTE]
 > Ez egy szabadidős projekt! Hibajelentéseket és fejlesztési ötleteket szívesen fogadok kulturáltan a Discord-on!
@@ -19,7 +19,7 @@ Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakr�
 - **Majomparádé**
 
 > [!CAUTION]
-> A Majomparádé Hit'n'Run szabályzata szerint a teljes torrentet le kell tölteni. **A StremHU | Source NEM tölti le a teljes torrentet!**
+> A Majomparádé Hit'n'Run szabályzata szerint a teljes torrentet le kell tölteni. **A StremHU Source NEM tölti le a teljes torrentet!**
 
 ### Funkciók
 
@@ -38,10 +38,11 @@ Self-hostolható Stremio addon, amellyel **közvetlenül magyar trackeroldalakr�
 - Docker + Docker Compose.
 - Távoli eléréshez saját domain és megfelelő hálózati beállítások.
 
-### StremHU | Source beüzemelési segédletek
+### StremHU Source beüzemelési segédletek
 
-- [StremHU | Source beüzemelése otthon](./docs/stremhu-source-beuzemelese-otthon.md)
-- [StremHU | Source elérése az internetről](./docs/stremhu-source-elerese-az-internetrol.md)
+- [StremHU Source beüzemelése otthon](./docs/stremhu-source-beuzemelese-otthon.md)
+- [StremHU Source elérése az internetről](./docs/stremhu-source-elerese-az-internetrol.md)
+- [StremHU Source elérése VPN-en keresztül](./docs//stremhu-source-elerese-vpn-en-keresztul.md)
 - [Docker Compose beállítási lehetőségek](./docs/docker-compose-beallitasi-lehetosegek.md)
 
 ### GYIK

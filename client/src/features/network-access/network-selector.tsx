@@ -9,8 +9,8 @@ const accessOptions = [
     label: 'Hozzáférés otthoni hálózaton',
     description: (
       <>
-        Csak a helyi hálózaton használod. A StremHU | Source egy biztonságos
-        HTTPS címet generál a helyi IP-dhez a{' '}
+        Csak a helyi hálózaton használod. A StremHU Source egy biztonságos HTTPS
+        címet generál a helyi IP-dhez a{' '}
         <a
           className="underline italic "
           href="https://local-ip.medicmobile.org"
@@ -36,7 +36,7 @@ const accessOptions = [
         >
           https://noip.com
         </a>
-        ), amely a StremHU | Source-ot futtató eszközre mutat, és biztosítja a
+        ), amely a StremHU Source-ot futtató eszközre mutat, és biztosítja a
         HTTPS-kapcsolatot.
       </>
     ),
