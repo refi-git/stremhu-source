@@ -17,7 +17,10 @@ import {
   AdapterTorrentId,
   TRACKER_TOKEN,
 } from '../adapters.types';
-import { getTrackerStructureErrorMessage } from '../adapters.utils';
+import {
+  getTrackerStructureErrorMessage,
+  getTrackerTorrentDownloadErrorMessage,
+} from '../adapters.utils';
 import { MajomparadeClientFactory } from './majomparade.client-factory';
 import {
   MAJOMPARADE_DETAILS_PATH,
@@ -35,13 +38,7 @@ import {
 @Injectable()
 export class MajomparadeClient {
   private readonly logger = new Logger(MajomparadeClient.name);
-  private readonly limiter = new Bottleneck({
-    reservoir: 10,
-    reservoirRefreshAmount: 10,
-    reservoirRefreshInterval: 1000,
-    maxConcurrent: 10,
-    minTime: 0,
-  });
+  private readonly limiter: Bottleneck;
 
   private readonly majomparadeBaseUrl: string;
 
@@ -53,6 +50,14 @@ export class MajomparadeClient {
     this.majomparadeBaseUrl = this.configService.getOrThrow<string>(
       'tracker.majomparade-url',
     );
+
+    const maxConcurrent = this.configService.getOrThrow<number>(
+      'tracker.majomparade-max-concurrent',
+    );
+
+    this.limiter = new Bottleneck({
+      maxConcurrent,
+    });
   }
 
   login(payload: MajomparadeLoginRequest) {
@@ -165,16 +170,25 @@ export class MajomparadeClient {
   async download(payload: AdapterTorrentId): Promise<AdapterParsedTorrent> {
     const { torrentId, downloadUrl } = payload;
 
-    const response = await this.requestLimit(() =>
-      this.majomparadeClientFactory.client.get<ArrayBuffer>(downloadUrl, {
-        responseType: 'arraybuffer',
-      }),
-    );
+    try {
+      const response = await this.requestLimit(() =>
+        this.majomparadeClientFactory.client.get<ArrayBuffer>(downloadUrl, {
+          responseType: 'arraybuffer',
+        }),
+      );
 
-    const bytes = new Uint8Array(response.data);
-    const parsed = await parseTorrent(bytes);
+      const bytes = new Uint8Array(response.data);
+      const parsed = await parseTorrent(bytes);
 
-    return { torrentId, parsed };
+      return { torrentId, parsed };
+    } catch (error) {
+      this.logger.error(
+        getTrackerTorrentDownloadErrorMessage(this.tracker, torrentId),
+        error,
+      );
+
+      throw error;
+    }
   }
 
   async hitnrun(): Promise<string[]> {

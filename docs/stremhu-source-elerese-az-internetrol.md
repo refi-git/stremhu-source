@@ -1,15 +1,15 @@
-## StremHU | Source elérése az internetről
+## StremHU Source elérése az internetről
 
-Ebben a fejezetben azt mutatjuk meg, hogyan tudod a StremHU | Source-ot úgy beállítani, hogy **az otthoni hálózatodon kívülről is elérd** (pl. mobilnetről, munkahelyről).
+Ebben a fejezetben azt mutatjuk meg, hogyan tudod a StremHU Source-ot úgy beállítani, hogy **az otthoni hálózatodon kívülről is elérd** (pl. mobilnetről, munkahelyről).
 
 ### Mit fogunk csinálni?
 
-Ahhoz, hogy kívülről is elérd a StremHU | Source-ot, három dolog kell:
+Ahhoz, hogy kívülről is elérd a StremHU Source-ot, három dolog kell:
 
 1. **Egy név (domain / hostnév)**  
    – pl. `stremhu.valami.hu` vagy `stremhu.duckdns.org`.
 
-2. **Egy reverse proxy**, ami a kintről érkező kéréseket továbbítja a StremHU | Source felé  
+2. **Egy reverse proxy**, ami a kintről érkező kéréseket továbbítja a StremHU Source felé  
    – pl. [Nginx Proxy Manager](https://nginxproxymanager.com/), Synology Reverse Proxy, Caddy, Traefik stb.
 
 3. **Egy megoldás a változó IP cím követésére (DDNS – Dynamic DNS)**  
@@ -91,12 +91,12 @@ Itt jön be a DDNS (Dynamic DNS):
 
 ### 3. Reverse proxy beállítása
 
-A reverse proxy az a „kapuőr”, ami az internet felől érkező kérést fogadja, és továbbítja a belső szolgáltatás felé (StremHU | Source).
+A reverse proxy az a „kapuőr”, ami az internet felől érkező kérést fogadja, és továbbítja a belső szolgáltatás felé (StremHU Source).
 
 Általános séma:
 
 ```text
-Internet → [Reverse proxy + HTTPS] → StremHU | Source (pl. 192.168.1.100:3000)
+Internet → [Reverse proxy + HTTPS] → StremHU Source (pl. 192.168.1.100:3000)
 ```
 
 #### 3.1. Synology Reverse Proxy (ha DSM-et használsz)
@@ -123,7 +123,7 @@ Lépések nagy vonalakban:
    - Állomásnév: pl. `192.168.1.100` (ahol a StremHU konténer fut)
    - Port: `3000` (ahogy lokálban beállítottad)
 
-Ezzel elérted, hogy amikor kintről valaki a `https://stremhu.valami.hu` címet nyitja meg, a reverse proxy továbbdobja a kérést a helyi StremHU | Source-ra.
+Ezzel elérted, hogy amikor kintről valaki a `https://stremhu.valami.hu` címet nyitja meg, a reverse proxy továbbdobja a kérést a helyi StremHU Source-ra.
 
 #### Nginx Proxy Manager mint reverse proxy (NAS-tól független megoldás)
 
@@ -172,7 +172,7 @@ A routered admin felületén be kell állítanod, hogy:
 Így néz ki az útvonal:
 
 ```text
-Internet (443) → Router → NAS/gép (443) → Reverse proxy → StremHU | Source
+Internet (443) → Router → NAS/gép (443) → Reverse proxy → StremHU Source
 ```
 
 ---
@@ -187,16 +187,16 @@ Egy tipikus, jól működő recept:
    - Nginx Proxy Manager (Dockerben) vagy Synology Reverse Proxy.
 3. Router porttovábbítás
    - kívül 443 → belül 443 (reverse proxy).
-4. StremHU | Source URL beállítása
-   - a StremHU | Source „Addon URL”-jéhez már a publikus domaint írod (pl. `https://stremhu.valami.hu`).
+4. StremHU Source URL beállítása
+   - a StremHU Source „Addon URL”-jéhez már a publikus domaint írod (pl. `https://stremhu.valami.hu`).
 5. Addon beállítása Stremio-ban
    - a Stremio felé is ezt az URL-t adod meg.
 
-Ha ez megvan, ugyanazzal az URL-lel eléred a StremHU | Source-ot otthonról és az internetről is.
+Ha ez megvan, ugyanazzal az URL-lel eléred a StremHU Source-ot otthonról és az internetről is.
 
 ---
 
 ### 6. Biztonsági megjegyzések
 
 - Használj HTTPS-t ez a Stremio működéséhez is szükséges (Let’s Encrypt, Caddy automatikus tanúsítványa, Cloudflare, stb.).
-- A tracker belépési adataidat mindig óvd, és csak a StremHU | Source felületén add meg őket.
+- A tracker belépési adataidat mindig óvd, és csak a StremHU Source felületén add meg őket.

@@ -49,7 +49,7 @@ export function NetworkAccessInfo() {
       <CardHeader>
         <CardTitle>Elérési adatok</CardTitle>
         <CardDescription>
-          Itt láthatod, milyen címen éri el a Stremio a StremHU | Source-ot, és
+          Itt láthatod, milyen címen éri el a Stremio a StremHU Source-ot, és
           hogy a kapcsolat rendben van-e.
         </CardDescription>
       </CardHeader>

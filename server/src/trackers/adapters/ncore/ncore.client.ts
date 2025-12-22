@@ -17,7 +17,10 @@ import {
   AdapterTorrentId,
   TRACKER_TOKEN,
 } from '../adapters.types';
-import { getTrackerStructureErrorMessage } from '../adapters.utils';
+import {
+  getTrackerStructureErrorMessage,
+  getTrackerTorrentDownloadErrorMessage,
+} from '../adapters.utils';
 import { NcoreClientFactory } from './ncore.client-factory';
 import { NCORE_HIT_N_RUN_PATH, NCORE_TORRENTS_PATH } from './ncore.constants';
 import {
@@ -36,13 +39,7 @@ import {
 @Injectable()
 export class NcoreClient {
   private readonly logger = new Logger(NcoreClient.name);
-  private readonly limiter = new Bottleneck({
-    reservoir: 10,
-    reservoirRefreshAmount: 10,
-    reservoirRefreshInterval: 1000,
-    maxConcurrent: 10,
-    minTime: 0,
-  });
+  private readonly limiter: Bottleneck;
 
   private readonly ncoreBaseUrl: string;
 
@@ -53,6 +50,14 @@ export class NcoreClient {
   ) {
     this.ncoreBaseUrl =
       this.configService.getOrThrow<string>('tracker.ncore-url');
+
+    const maxConcurrent = this.configService.getOrThrow<number>(
+      'tracker.ncore-max-concurrent',
+    );
+
+    this.limiter = new Bottleneck({
+      maxConcurrent,
+    });
   }
 
   login(payload: NcoreLoginRequest) {
@@ -173,16 +178,25 @@ export class NcoreClient {
   async download(payload: NcoreDownloadRequest): Promise<AdapterParsedTorrent> {
     const { torrentId, downloadUrl } = payload;
 
-    const response = await this.requestLimit(() =>
-      this.ncoreClientFactory.client.get<ArrayBuffer>(downloadUrl, {
-        responseType: 'arraybuffer',
-      }),
-    );
+    try {
+      const response = await this.requestLimit(() =>
+        this.ncoreClientFactory.client.get<ArrayBuffer>(downloadUrl, {
+          responseType: 'arraybuffer',
+        }),
+      );
 
-    const bytes = new Uint8Array(response.data);
-    const parsed = await parseTorrent(bytes);
+      const bytes = new Uint8Array(response.data);
+      const parsed = await parseTorrent(bytes);
 
-    return { torrentId, parsed };
+      return { torrentId, parsed };
+    } catch (error) {
+      this.logger.error(
+        getTrackerTorrentDownloadErrorMessage(this.tracker, torrentId),
+        error,
+      );
+
+      throw error;
+    }
   }
 
   async hitnrun(): Promise<string[]> {

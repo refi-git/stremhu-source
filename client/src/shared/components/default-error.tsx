@@ -15,7 +15,7 @@ export function DefaultError(props: DefaultError) {
       <Alert variant="default" className="max-w-md">
         <AlertCircleIcon className="stroke-destructive" />
         <AlertTitle className="text-destructive">
-          Hiba történt az StremHU | Source betöltése közben!
+          Hiba történt az StremHU Source betöltése közben!
         </AlertTitle>
         <AlertDescription>
           <p className="font-mono">{error.message}</p>
