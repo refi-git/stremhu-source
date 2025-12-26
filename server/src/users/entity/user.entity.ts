@@ -64,6 +64,9 @@ export class User {
   })
   torrentSeed: number | null;
 
+  @Column({ name: 'only_best_torrent', type: 'boolean', default: false })
+  onlyBestTorrent!: boolean;
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 

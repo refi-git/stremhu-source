@@ -27,10 +27,10 @@ import { VideoQualityEnum } from './enum/video-quality.enum';
 import { ParsedStreamIdSeries } from './pipe/stream-id.pipe';
 import { FindStreams } from './type/find-streams.type';
 import { VideoFileWithRank } from './type/video-file-with-rank.type';
+import { buildSelectors } from './util/build-selectors';
 import { findVideoFile } from './util/find-video-file.util';
 import { isNotWebReady } from './util/is-not-web-ready.util';
 import { parseVideoQualities } from './util/parse-video-qualities.util';
-import { buildSelectors } from './util/resolution.util';
 
 @Injectable()
 export class StreamsService {
@@ -85,7 +85,7 @@ export class StreamsService {
       },
     }));
 
-    const streams: StreamDto[] = sortedVideoFiles.map((videoFile) => {
+    let streams: StreamDto[] = sortedVideoFiles.map((videoFile) => {
       const videoQualities = videoFile.videoQualities.filter(
         (videoQuality) => videoQuality !== VideoQualityEnum.SDR,
       );
@@ -132,6 +132,10 @@ export class StreamsService {
         },
       };
     });
+
+    if (user.onlyBestTorrent) {
+      streams = [streams[0]];
+    }
 
     return [...streams, ...streamErrors];
   }

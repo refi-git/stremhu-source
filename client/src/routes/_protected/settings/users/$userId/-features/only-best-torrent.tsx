@@ -2,8 +2,7 @@ import { useForm } from '@tanstack/react-form'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
-import { torrentLanguagesSchema } from '@/common/schemas'
-import { LanguagesSelector } from '@/shared/components/form/languages-selector'
+import { onlyBestTorrentSchema } from '@/common/schemas'
 import {
   Card,
   CardContent,
@@ -11,26 +10,28 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card'
+import { Label } from '@/shared/components/ui/label'
+import { Switch } from '@/shared/components/ui/switch'
 import type { UserDto } from '@/shared/lib/source-client'
 import { parseApiError } from '@/shared/lib/utils'
 import { useUpdateUser } from '@/shared/queries/users'
 
 const validatorSchema = z.object({
-  torrentLanguages: torrentLanguagesSchema,
+  onlyBestTorrent: onlyBestTorrentSchema,
 })
 
-type LanguagePreferences = {
+type OnlyBestTorrent = {
   user: UserDto
 }
 
-export function LanguagePreferences(props: LanguagePreferences) {
+export function OnlyBestTorrent(props: OnlyBestTorrent) {
   const { user } = props
 
   const { mutateAsync: updateUser } = useUpdateUser()
 
   const form = useForm({
     defaultValues: {
-      torrentLanguages: user.torrentLanguages,
+      onlyBestTorrent: user.onlyBestTorrent,
     },
     validators: {
       onChange: validatorSchema,
@@ -57,18 +58,23 @@ export function LanguagePreferences(props: LanguagePreferences) {
   return (
     <Card className="break-inside-avoid mb-4">
       <CardHeader>
-        <CardTitle>Előnyben részesített nyelv</CardTitle>
+        <CardTitle>Családbarát mód</CardTitle>
         <CardDescription>
-          Állítsd be, milyen nyelvet részesítsen előnyben a rendszer.
+          Csak a legjobb torrent jelenik meg a beállított preferenciáid alapján
+          - így nem kell listából válogatni.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form.Field name="torrentLanguages" mode="array">
+        <form.Field name="onlyBestTorrent">
           {(field) => (
-            <LanguagesSelector
-              items={field.state.value}
-              onChangeItems={(items) => field.handleChange(items)}
-            />
+            <Label htmlFor={field.name} className="flex items-start gap-3">
+              <Switch
+                id={field.name}
+                checked={field.state.value}
+                onCheckedChange={field.handleChange}
+              />
+              Családbarát mód
+            </Label>
           )}
         </form.Field>
       </CardContent>
