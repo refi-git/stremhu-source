@@ -1,13 +1,14 @@
 import {
+  Resolution as ResolutionEnum,
   Source as SourceEnum,
   VideoCodec as VideoCodecEnum,
 } from '@ctrl/video-filename-parser';
 
+import { LanguageEnum } from 'src/common/enum/language.enum';
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 
 import { AudioCodecEnum } from '../enum/audio-codec.enum';
-import { VideoFileLanguage } from './video-file-language.type';
-import { VideoFileResolution } from './video-file-resolution.type';
+import { VideoQualityEnum } from '../enum/video-quality.enum';
 
 export type VideoFileWithRank = {
   imdbId: string;
@@ -21,11 +22,11 @@ export type VideoFileWithRank = {
   fileSize: number;
   fileIndex: number;
 
-  resolution: VideoFileResolution;
-  language: VideoFileLanguage;
+  resolution: ResolutionEnum;
+  language: LanguageEnum;
   videoCodec?: VideoCodecEnum;
   audioCodec?: AudioCodecEnum;
-  hdrTypes: string[];
+  videoQualities: VideoQualityEnum[];
   sources: SourceEnum[];
   notWebReady: boolean;
 };

@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 
 import { LanguageEnum } from 'src/common/enum/language.enum';
+import { VideoQualityEnum } from 'src/stremio/streams/enum/video-quality.enum';
 
 import { UserRoleEnum } from '../enum/user-role.enum';
 
@@ -40,6 +41,13 @@ export class User {
     default: JSON.stringify(Object.values(Resolution)),
   })
   torrentResolutions: Resolution[];
+
+  @Column({
+    name: 'torrent_video_qualities',
+    type: 'simple-json',
+    default: JSON.stringify(Object.values(VideoQualityEnum)),
+  })
+  torrentVideoQualities: VideoQualityEnum[];
 
   @Column({
     name: 'torrent_languages',

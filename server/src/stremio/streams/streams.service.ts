@@ -1,15 +1,17 @@
 import {
-  Resolution as ResolutionEnum,
   Source as SourceEnum,
   filenameParse,
 } from '@ctrl/video-filename-parser';
 import { Injectable } from '@nestjs/common';
 import { filesize } from 'filesize';
-import _ from 'lodash';
+import { compact, orderBy } from 'lodash';
 
 import { CatalogService } from 'src/catalog/catalog.service';
-import { RESOLUTION_LABEL_MAP } from 'src/common/common.constant';
-import { LanguageEnum } from 'src/common/enum/language.enum';
+import {
+  LANGUAGE_LABEL_MAP,
+  RESOLUTION_LABEL_MAP,
+  VIDEO_QUALITY_LABEL_MAP,
+} from 'src/common/common.constant';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TrackerTorrentStatusEnum } from 'src/trackers/enum/tracker-torrent-status.enum';
 import { TrackerDiscoveryService } from 'src/trackers/tracker-discovery.service';
@@ -21,14 +23,14 @@ import { TRACKER_INFO } from 'src/trackers/trackers.constants';
 import { User } from 'src/users/entity/user.entity';
 
 import { StreamDto } from './dto/stremio-stream.dto';
+import { VideoQualityEnum } from './enum/video-quality.enum';
 import { ParsedStreamIdSeries } from './pipe/stream-id.pipe';
 import { FindStreams } from './type/find-streams.type';
-import { VideoFileLanguage } from './type/video-file-language.type';
-import { VideoFileResolution } from './type/video-file-resolution.type';
 import { VideoFileWithRank } from './type/video-file-with-rank.type';
 import { findVideoFile } from './util/find-video-file.util';
 import { isNotWebReady } from './util/is-not-web-ready.util';
-import { parseHdrTypes } from './util/parse-hdr-types.util';
+import { parseVideoQualities } from './util/parse-video-qualities.util';
+import { buildSelectors } from './util/resolution.util';
 
 @Injectable()
 export class StreamsService {
@@ -67,13 +69,12 @@ export class StreamsService {
     });
 
     const videoFiles = this.findVideoFilesWithRank(
-      user,
       isSpecial,
       torrentSuccesses,
       series,
     );
     const filteredVideoFiles = this.filterVideoFiles(videoFiles, user);
-    const sortedVideoFiles = this.sortVideoFiles(filteredVideoFiles);
+    const sortedVideoFiles = this.sortVideoFiles(filteredVideoFiles, user);
 
     const streamErrors: StreamDto[] = torrentErrors.map((torrentError) => ({
       name: '❗ H I B A ❗',
@@ -85,9 +86,16 @@ export class StreamsService {
     }));
 
     const streams: StreamDto[] = sortedVideoFiles.map((videoFile) => {
-      const hdrTypes = videoFile.hdrTypes.join(', ');
+      const videoQualities = videoFile.videoQualities.filter(
+        (videoQuality) => videoQuality !== VideoQualityEnum.SDR,
+      );
 
-      const nameArray = _.compact([videoFile.resolution.label, hdrTypes]);
+      const readableVideoQualities = videoQualities
+        .map((videoQuality) => VIDEO_QUALITY_LABEL_MAP[videoQuality])
+        .join(', ');
+      const readableResolution = RESOLUTION_LABEL_MAP[videoFile.resolution];
+
+      const nameArray = compact([readableResolution, readableVideoQualities]);
 
       const isCamSource = videoFile.sources.includes(SourceEnum.CAM);
 
@@ -95,21 +103,22 @@ export class StreamsService {
         nameArray.push('📹 CAM');
       }
 
+      const readableLanguage = `🌍 ${LANGUAGE_LABEL_MAP[videoFile.language]}`;
       const fileSize = `💾 ${filesize(videoFile.fileSize)}`;
       const seeders = `👥 ${videoFile.seeders}`;
       const tracker = `🧲 ${TRACKER_INFO[videoFile.tracker].label}`;
       const group = videoFile.group ? `🎯 ${videoFile.group}` : undefined;
 
-      const descriptionArray = _.compact([
-        _.compact([tracker, seeders]).join(' | '),
-        _.compact([videoFile.language.label, videoFile.audioCodec]).join(' | '),
-        _.compact([fileSize, group]).join(' | '),
+      const descriptionArray = compact([
+        compact([tracker, seeders]).join(' | '),
+        compact([readableLanguage, videoFile.audioCodec]).join(' | '),
+        compact([fileSize, group]).join(' | '),
       ]);
 
       const bingeGroup = [
         videoFile.tracker,
-        videoFile.resolution.value.toLowerCase(),
-        videoFile.language.value.toLowerCase(),
+        videoFile.resolution,
+        videoFile.language,
       ].join('-');
 
       return {
@@ -128,7 +137,6 @@ export class StreamsService {
   }
 
   private findVideoFilesWithRank(
-    user: User,
     isSpecial: boolean,
     torrents: TrackerTorrentSuccess[],
     series?: ParsedStreamIdSeries,
@@ -179,14 +187,11 @@ export class StreamsService {
         fileSize: videoFile.file.length,
         fileIndex: videoFile.fileIndex,
 
-        language: this.toLanguageInfo(torrent.language, user),
-        resolution: this.toResolutionInfo(
-          resolution || torrent.resolution,
-          user,
-        ),
+        language: torrent.language,
+        resolution: resolution || torrent.resolution,
         audioCodec,
         videoCodec,
-        hdrTypes: parseHdrTypes(torrentName),
+        videoQualities: parseVideoQualities(torrentName),
         sources,
         notWebReady: isNotWebReady(videoCodec, audioCodec),
       };
@@ -197,118 +202,71 @@ export class StreamsService {
     return torrentByFiles;
   }
 
-  private sortVideoFiles(videoFiles: VideoFileWithRank[]): VideoFileWithRank[] {
-    const sortedVideoFiles = _.orderBy(
-      videoFiles,
-      [
-        (videoFile) => videoFile.language.rank,
-        (videoFile) => videoFile.resolution.rank,
-        (videoFile) => videoFile.seeders,
-      ],
-      ['asc', 'asc', 'desc'],
-    );
-
-    return sortedVideoFiles;
-  }
-
   private filterVideoFiles(
     videoFiles: VideoFileWithRank[],
     user: User,
   ): VideoFileWithRank[] {
-    const { torrentLanguages, torrentResolutions, torrentSeed } = user;
+    const {
+      torrentLanguages,
+      torrentResolutions,
+      torrentVideoQualities,
+      torrentSeed,
+    } = user;
+
+    const resolutionSelectors = buildSelectors(torrentResolutions);
+    const videoQualitySelectors = buildSelectors(torrentVideoQualities);
+    const languageSelectors = buildSelectors(torrentLanguages);
 
     const filteredVideoFiles = videoFiles.filter((videoFile) => {
-      const isLanguageSet = torrentLanguages.includes(videoFile.language.value);
-
-      const isResolutionSet = torrentResolutions.includes(
-        videoFile.resolution.value,
-      );
-
       let isSeedSet = true;
 
       if (torrentSeed !== null) {
         isSeedSet = videoFile.seeders > torrentSeed;
       }
 
-      return isLanguageSet && isResolutionSet && isSeedSet;
+      return (
+        isSeedSet &&
+        resolutionSelectors.filterToAllowed(videoFile.resolution) &&
+        languageSelectors.filterToAllowed(videoFile.language) &&
+        videoFile.videoQualities.some((videoQuality) =>
+          videoQualitySelectors.filterToAllowed(videoQuality),
+        )
+      );
     });
 
     return filteredVideoFiles;
   }
 
-  private toLanguageInfo(
-    language: LanguageEnum,
+  private sortVideoFiles(
+    videoFiles: VideoFileWithRank[],
     user: User,
-  ): VideoFileLanguage {
-    const index = user.torrentLanguages.indexOf(language);
+  ): VideoFileWithRank[] {
+    const { torrentLanguages, torrentResolutions, torrentVideoQualities } =
+      user;
 
-    let rank: number | undefined = undefined;
-    if (index !== -1) {
-      rank = index + 1;
-    }
+    const languageSelectors = buildSelectors(torrentLanguages);
+    const resolutionSelectors = buildSelectors(torrentResolutions);
+    const videoQualitySelectors = buildSelectors(torrentVideoQualities);
 
-    const videoFileLanguage: VideoFileLanguage = {
-      label: '🌍 magyar',
-      rank: rank || 91,
-      value: language,
-    };
+    const sortedVideoFiles = orderBy(
+      videoFiles,
+      [
+        (videoFile) => languageSelectors.priorityIndex(videoFile.language),
+        (videoFile) => resolutionSelectors.priorityIndex(videoFile.resolution),
+        (videoFile) => {
+          const bestQualityRank = Math.min(
+            ...videoFile.videoQualities.map((videoQuality) =>
+              videoQualitySelectors.priorityIndex(videoQuality),
+            ),
+          );
 
-    if (language !== LanguageEnum.HU) {
-      videoFileLanguage.label = '🌍 english';
-      videoFileLanguage.rank = rank || 92;
-    }
+          return bestQualityRank;
+        },
+        (videoFile) => videoFile.seeders,
+      ],
+      ['asc', 'asc', 'asc', 'desc'],
+    );
 
-    return videoFileLanguage;
-  }
-
-  private toResolutionInfo(
-    resolution: ResolutionEnum,
-    user: User,
-  ): VideoFileResolution {
-    const resolutionIndex = user.torrentResolutions.indexOf(resolution);
-
-    let resolutionRank: number | undefined = undefined;
-    if (resolutionIndex !== -1) {
-      resolutionRank = resolutionIndex + 1;
-    }
-
-    switch (resolution) {
-      case ResolutionEnum.R2160P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 91,
-        };
-      case ResolutionEnum.R1080P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 92,
-        };
-      case ResolutionEnum.R720P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 93,
-        };
-      case ResolutionEnum.R576P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 94,
-        };
-      case ResolutionEnum.R540P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 95,
-        };
-      case ResolutionEnum.R480P:
-        return {
-          label: RESOLUTION_LABEL_MAP[resolution],
-          value: resolution,
-          rank: resolutionRank || 96,
-        };
-    }
+    return sortedVideoFiles;
   }
 }
