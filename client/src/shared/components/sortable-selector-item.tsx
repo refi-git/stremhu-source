@@ -5,6 +5,7 @@ import { MoveVerticalIcon, TrashIcon } from 'lucide-react'
 import type {
   LanguageEnum,
   ResolutionEnum,
+  SourceTypeEnum,
   VideoQualityEnum,
 } from '@/shared/lib/source-client'
 
@@ -19,7 +20,7 @@ interface SortableSelectorItemProps<T> {
 }
 
 export function SortableSelectorItem<
-  T extends ResolutionEnum | LanguageEnum | VideoQualityEnum,
+  T extends ResolutionEnum | LanguageEnum | VideoQualityEnum | SourceTypeEnum,
 >(props: SortableSelectorItemProps<T>) {
   const { item, label, isDisabled, onDelete } = props
 

@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isUndefined, omitBy } from 'lodash';
 import { EntityManager, Repository } from 'typeorm';
 
-import { GLOBAL_ID } from 'src/common/common.constant';
+import { GLOBAL_ID } from 'src/common/constant/common.constant';
 
 import { Setting } from '../entity/setting.entity';
 import { SettingToCreate, SettingToUpdate } from '../settings.types';

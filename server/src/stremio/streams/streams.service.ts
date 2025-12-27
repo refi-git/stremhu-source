@@ -6,11 +6,9 @@ import { Injectable } from '@nestjs/common';
 import { compact, orderBy } from 'lodash';
 
 import { CatalogService } from 'src/catalog/catalog.service';
-import {
-  LANGUAGE_LABEL_MAP,
-  RESOLUTION_LABEL_MAP,
-  VIDEO_QUALITY_LABEL_MAP,
-} from 'src/common/common.constant';
+import { LANGUAGE_LABEL_MAP } from 'src/common/constant/language.constant';
+import { RESOLUTION_LABEL_MAP } from 'src/common/constant/resolution.constant';
+import { VIDEO_QUALITY_LABEL_MAP } from 'src/common/constant/video-quality.constant';
 import { formatFilesize } from 'src/common/utils/file.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TrackerTorrentStatusEnum } from 'src/trackers/enum/tracker-torrent-status.enum';
@@ -31,6 +29,7 @@ import { VideoFile } from './type/video-file.type';
 import { buildSelectors } from './util/build-selectors';
 import { findVideoFile } from './util/find-video-file.util';
 import { isNotWebReady } from './util/is-not-web-ready.util';
+import { parseSourceType } from './util/parse-source-type.util';
 import { parseVideoQualities } from './util/parse-video-qualities.util';
 
 @Injectable()
@@ -215,6 +214,7 @@ export class StreamsService {
         audioCodec,
         videoCodec,
         videoQualities: parseVideoQualities(torrentName),
+        sourceType: parseSourceType(torrentName),
         sources,
         notWebReady: isNotWebReady(videoCodec, audioCodec),
       };
@@ -230,12 +230,14 @@ export class StreamsService {
       torrentLanguages,
       torrentResolutions,
       torrentVideoQualities,
+      torrentSourceTypes,
       torrentSeed,
     } = user;
 
+    const languageSelectors = buildSelectors(torrentLanguages);
     const resolutionSelectors = buildSelectors(torrentResolutions);
     const videoQualitySelectors = buildSelectors(torrentVideoQualities);
-    const languageSelectors = buildSelectors(torrentLanguages);
+    const sourceTypeSelectors = buildSelectors(torrentSourceTypes);
 
     const filteredVideoFiles = videoFiles.filter((videoFile) => {
       let isSeedSet = true;
@@ -250,7 +252,8 @@ export class StreamsService {
         languageSelectors.filterToAllowed(videoFile.language) &&
         videoFile.videoQualities.some((videoQuality) =>
           videoQualitySelectors.filterToAllowed(videoQuality),
-        )
+        ) &&
+        sourceTypeSelectors.filterToAllowed(videoFile.sourceType)
       );
     });
 
@@ -258,12 +261,17 @@ export class StreamsService {
   }
 
   private sortVideoFiles(videoFiles: VideoFile[], user: User): VideoFile[] {
-    const { torrentLanguages, torrentResolutions, torrentVideoQualities } =
-      user;
+    const {
+      torrentLanguages,
+      torrentResolutions,
+      torrentVideoQualities,
+      torrentSourceTypes,
+    } = user;
 
     const languageSelectors = buildSelectors(torrentLanguages);
     const resolutionSelectors = buildSelectors(torrentResolutions);
     const videoQualitySelectors = buildSelectors(torrentVideoQualities);
+    const sourceTypeSelectors = buildSelectors(torrentSourceTypes);
 
     const sortedVideoFiles = orderBy(
       videoFiles,
@@ -279,9 +287,10 @@ export class StreamsService {
 
           return bestQualityRank;
         },
+        (videoFile) => sourceTypeSelectors.priorityIndex(videoFile.sourceType),
         (videoFile) => videoFile.seeders,
       ],
-      ['asc', 'asc', 'asc', 'desc'],
+      ['asc', 'asc', 'asc', 'asc', 'desc'],
     );
 
     return sortedVideoFiles;

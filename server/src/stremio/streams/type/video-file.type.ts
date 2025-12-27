@@ -8,6 +8,7 @@ import { LanguageEnum } from 'src/common/enum/language.enum';
 import { TrackerEnum } from 'src/trackers/enum/tracker.enum';
 
 import { AudioCodecEnum } from '../enum/audio-codec.enum';
+import { SourceTypeEnum } from '../enum/source-type.enum';
 import { VideoQualityEnum } from '../enum/video-quality.enum';
 
 export type VideoFile = {
@@ -27,6 +28,7 @@ export type VideoFile = {
   videoCodec?: VideoCodecEnum;
   audioCodec?: AudioCodecEnum;
   videoQualities: VideoQualityEnum[];
+  sourceType: SourceTypeEnum;
   sources: SourceEnum[];
   notWebReady: boolean;
 };

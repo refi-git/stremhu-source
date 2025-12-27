@@ -27,6 +27,8 @@ export type { MetadataDto } from './models/MetadataDto';
 export type { ResolutionDto } from './models/ResolutionDto';
 export { ResolutionEnum } from './models/ResolutionEnum';
 export type { SettingDto } from './models/SettingDto';
+export type { SourceTypeDto } from './models/SourceTypeDto';
+export { SourceTypeEnum } from './models/SourceTypeEnum';
 export type { StatusDto } from './models/StatusDto';
 export type { StreamDto } from './models/StreamDto';
 export type { StreamsResponseDto } from './models/StreamsResponseDto';
