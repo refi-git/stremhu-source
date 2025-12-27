@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
 import { useMetadata } from '@/shared/hooks/use-metadata'
-import type { ResolutionEnum } from '@/shared/lib/source-client'
+import type { SourceTypeEnum } from '@/shared/lib/source-client'
 import { assertExists, cn } from '@/shared/lib/utils'
 import { getMetadata } from '@/shared/queries/metadata'
 
@@ -17,23 +17,23 @@ import { SelectorItem } from '../selector-item'
 import { SortableSelectorItem } from '../sortable-selector-item'
 import { Separator } from '../ui/separator'
 
-type ResolutionsSelector = {
-  items: Array<ResolutionEnum>
-  onChangeItems: (items: Array<ResolutionEnum>) => void
+type SourceTypesSelector = {
+  items: Array<SourceTypeEnum>
+  onChangeItems: (items: Array<SourceTypeEnum>) => void
 } & React.ComponentProps<'div'>
 
-export function ResolutionsSelector(props: ResolutionsSelector) {
+export function SourceTypesSelector(props: SourceTypesSelector) {
   const { items, onChangeItems, className, ...rest } = props
 
   const { data: metadata } = useQuery(getMetadata)
   assertExists(metadata)
 
-  const { getResolutionLabel } = useMetadata()
+  const { getSourceTypeLabel } = useMetadata()
 
-  const inactiveResolutions = metadata.resolutions.filter(
-    (resolution) => !items.includes(resolution.value),
+  const inactiveVideoQualities = metadata.sourceTypes.filter(
+    (item) => !items.includes(item.value),
   )
-  const hasInactiveResolution = inactiveResolutions.length > 0
+  const hasInactiveVideoQualities = inactiveVideoQualities.length > 0
 
   const [localItems, setLocalItems] = useState(items)
 
@@ -59,8 +59,8 @@ export function ResolutionsSelector(props: ResolutionsSelector) {
     const { active, over } = event
 
     if (!over || active.id === over.id) return
-    const oldIndex = localItems.indexOf(active.id as ResolutionEnum)
-    const newIndex = localItems.indexOf(over.id as ResolutionEnum)
+    const oldIndex = localItems.indexOf(active.id as SourceTypeEnum)
+    const newIndex = localItems.indexOf(over.id as SourceTypeEnum)
     if (oldIndex < 0 || newIndex < 0) return
 
     const nextItems = [...localItems]
@@ -70,12 +70,12 @@ export function ResolutionsSelector(props: ResolutionsSelector) {
     setLocalItems(nextItems)
   }
 
-  const handleAdd = (item: ResolutionEnum) => {
+  const handleAdd = (item: SourceTypeEnum) => {
     const nextItems = [...localItems, item]
     setLocalItems(nextItems)
   }
 
-  const handleDelete = (item: ResolutionEnum) => {
+  const handleDelete = (item: SourceTypeEnum) => {
     const nextItems = localItems.filter((value) => value !== item)
     setLocalItems(nextItems)
   }
@@ -91,21 +91,21 @@ export function ResolutionsSelector(props: ResolutionsSelector) {
             <SortableSelectorItem
               key={item}
               item={item}
-              label={getResolutionLabel(item)}
+              label={getSourceTypeLabel(item)}
               isDisabled={localItems.length === 1}
               onDelete={handleDelete}
             />
           ))}
         </SortableContext>
       </DndContext>
-      {hasInactiveResolution && (
+      {hasInactiveVideoQualities && (
         <>
           <Separator />
-          {inactiveResolutions.map((inactiveResolution) => (
+          {inactiveVideoQualities.map((item) => (
             <SelectorItem
-              key={inactiveResolution.value}
-              label={inactiveResolution.label}
-              value={inactiveResolution.value}
+              key={item.value}
+              label={item.label}
+              value={item.value}
               onAdd={handleAdd}
             />
           ))}

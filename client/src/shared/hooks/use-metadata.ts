@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import type {
   LanguageEnum,
   ResolutionEnum,
+  SourceTypeEnum,
   TrackerEnum,
   UserRoleEnum,
   VideoQualityEnum,
@@ -13,8 +14,14 @@ export function useMetadata() {
   const { data: metadata } = useQuery(getMetadata)
   if (!metadata) throw new Error(`Nincs "metadata" a cache-ben`)
 
-  const { languages, resolutions, videoQualities, trackers, userRoles } =
-    metadata
+  const {
+    languages,
+    resolutions,
+    videoQualities,
+    sourceTypes,
+    trackers,
+    userRoles,
+  } = metadata
 
   const getUserRoleLabel = (userRoleEnum: UserRoleEnum): string => {
     const found = userRoles.find((role) => role.value === userRoleEnum)
@@ -40,6 +47,13 @@ export function useMetadata() {
     return found!.label
   }
 
+  const getSourceTypeLabel = (sourceTypeEnum: SourceTypeEnum): string => {
+    const found = sourceTypes.find(
+      (sourceType) => sourceType.value === sourceTypeEnum,
+    )
+    return found!.label
+  }
+
   const getTrackerLabel = (trackerEnum: TrackerEnum) => {
     const found = trackers.find((tracker) => tracker.value === trackerEnum)
     return found!.label
@@ -55,6 +69,7 @@ export function useMetadata() {
     getLanguageLabel,
     getResolutionLabel,
     getVideoQualityLabel,
+    getSourceTypeLabel,
     getTrackerLabel,
     getTrackerFullDownload,
   }

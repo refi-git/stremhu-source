@@ -1,8 +1,9 @@
 export enum SourceTypeEnum {
-  REMUX = 'remux',
+  DISC_REMUX = 'disc-remux',
+  DISC_RIP = 'disc-rip',
   WEB_DL = 'web-dl',
-  RIP = 'rip',
-  HDTV = 'hdtv',
-  CAM = 'cam',
+  WEB_RIP = 'web-rip',
+  BROADCAST = 'broadcast',
+  THEATRICAL = 'theatrical',
   UNKNOWN = 'unknown',
 }

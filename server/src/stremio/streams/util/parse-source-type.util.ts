@@ -1,18 +1,20 @@
 import { SourceTypeEnum } from '../enum/source-type.enum';
 
 type HdrType =
-  | SourceTypeEnum.REMUX
+  | SourceTypeEnum.DISC_REMUX
+  | SourceTypeEnum.DISC_RIP
   | SourceTypeEnum.WEB_DL
-  | SourceTypeEnum.RIP
-  | SourceTypeEnum.HDTV
-  | SourceTypeEnum.CAM;
+  | SourceTypeEnum.WEB_RIP
+  | SourceTypeEnum.BROADCAST
+  | SourceTypeEnum.THEATRICAL;
 
 const SOURCE_TYPE_PATTERNS: Record<HdrType, string[]> = {
-  [SourceTypeEnum.REMUX]: ['.remux.'],
+  [SourceTypeEnum.DISC_REMUX]: ['.remux.'],
+  [SourceTypeEnum.DISC_RIP]: ['.bluray.', '.bdrip.', '.dvdrip.'],
   [SourceTypeEnum.WEB_DL]: ['.web-dl.', '.web_dl.', '.web-dl-rip.'],
-  [SourceTypeEnum.RIP]: ['.webrip.', '.bluray.', '.bdrip.', '.dvdrip.'],
-  [SourceTypeEnum.HDTV]: ['.hdtv.'],
-  [SourceTypeEnum.CAM]: ['.cam.', '.ts.', '.tc.'],
+  [SourceTypeEnum.WEB_RIP]: ['.webrip.'],
+  [SourceTypeEnum.BROADCAST]: ['.hdtv.', '.pdtv.', '.dvb.', '.satrip.'],
+  [SourceTypeEnum.THEATRICAL]: ['.cam.', '.ts.', '.tc.'],
 };
 
 export function parseSourceType(torrentName: string): SourceTypeEnum {

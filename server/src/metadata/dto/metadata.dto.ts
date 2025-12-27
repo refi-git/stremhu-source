@@ -5,6 +5,7 @@ import { HealthDto } from 'src/common/dto/health.dto';
 
 import { LanguageDto } from './language.dto';
 import { ResolutionDto } from './resolution.dto';
+import { SourceTypeDto } from './source-type.dto';
 import { TrackerMetaDto } from './tracker-meta.dto';
 import { UserRoleDto } from './user-role.dto';
 import { VideoQualityDto } from './video-quality.dto';
@@ -25,6 +26,10 @@ export class MetadataDto extends HealthDto {
   @IsArray()
   @ApiProperty({ type: LanguageDto, isArray: true })
   languages: LanguageDto[];
+
+  @IsArray()
+  @ApiProperty({ type: SourceTypeDto, isArray: true })
+  sourceTypes: SourceTypeDto[];
 
   @IsArray()
   @ApiProperty({ type: TrackerMetaDto, isArray: true })

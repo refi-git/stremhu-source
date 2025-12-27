@@ -8,10 +8,12 @@ import {
   torrentLanguagesSchema,
   torrentResolutionsSchema,
   torrentSeedSchema,
+  torrentSourceTypesSchema,
   torrentVideoQualitiesSchema,
 } from '@/common/schemas'
 import { LanguagesSelector } from '@/shared/components/form/languages-selector'
 import { ResolutionsSelector } from '@/shared/components/form/resolutions-selector'
+import { SourceTypesSelector } from '@/shared/components/form/source-types-selector'
 import { VideoQualitiesSelector } from '@/shared/components/form/video-qualities-selector'
 import {
   Card,
@@ -31,6 +33,7 @@ import { getMetadata } from '@/shared/queries/metadata'
 export const validatorSchema = z.object({
   torrentResolutions: torrentResolutionsSchema,
   torrentVideoQualities: torrentVideoQualitiesSchema,
+  torrentSourceTypes: torrentSourceTypesSchema,
   torrentLanguages: torrentLanguagesSchema,
   torrentSeed: torrentSeedSchema,
   onlyBestTorrent: onlyBestTorrentSchema,
@@ -48,8 +51,9 @@ export function TorrentsPreferences() {
   const form = useForm({
     defaultValues: {
       torrentLanguages: me.torrentLanguages,
-      torrentVideoQualities: me.torrentVideoQualities,
       torrentResolutions: me.torrentResolutions,
+      torrentVideoQualities: me.torrentVideoQualities,
+      torrentSourceTypes: me.torrentSourceTypes,
       torrentSeed: me.torrentSeed,
       onlyBestTorrent: me.onlyBestTorrent,
     },
@@ -77,6 +81,24 @@ export function TorrentsPreferences() {
 
   return (
     <div className="columns-1 md:columns-2 gap-4">
+      <Card className="break-inside-avoid mb-4">
+        <CardHeader>
+          <CardTitle>Előnyben részesített nyelv</CardTitle>
+          <CardDescription>
+            Állítsd be, milyen nyelvet részesítsen előnyben a rendszer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form.Field name="torrentLanguages" mode="array">
+            {(field) => (
+              <LanguagesSelector
+                items={field.state.value}
+                onChangeItems={(items) => field.handleChange(items)}
+              />
+            )}
+          </form.Field>
+        </CardContent>
+      </Card>
       <Card className="break-inside-avoid mb-4">
         <CardHeader>
           <CardTitle>Előnyben részesített felbontás</CardTitle>
@@ -115,15 +137,15 @@ export function TorrentsPreferences() {
       </Card>
       <Card className="break-inside-avoid mb-4">
         <CardHeader>
-          <CardTitle>Előnyben részesített nyelv</CardTitle>
+          <CardTitle>Előnyben részesített forrás</CardTitle>
           <CardDescription>
-            Állítsd be, milyen nyelvet részesítsen előnyben a rendszer.
+            Állítsd be, milyen forrást részesítsen előnyben a rendszer.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form.Field name="torrentLanguages" mode="array">
+          <form.Field name="torrentSourceTypes" mode="array">
             {(field) => (
-              <LanguagesSelector
+              <SourceTypesSelector
                 items={field.state.value}
                 onChangeItems={(items) => field.handleChange(items)}
               />
@@ -131,6 +153,7 @@ export function TorrentsPreferences() {
           </form.Field>
         </CardContent>
       </Card>
+
       <Card className="break-inside-avoid mb-4">
         <CardHeader>
           <CardTitle>Torrent elérhetősége</CardTitle>

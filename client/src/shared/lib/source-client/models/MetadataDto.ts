@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { LanguageDto } from './LanguageDto';
 import type { ResolutionDto } from './ResolutionDto';
+import type { SourceTypeDto } from './SourceTypeDto';
 import type { TrackerMetaDto } from './TrackerMetaDto';
 import type { UserRoleDto } from './UserRoleDto';
 import type { VideoQualityDto } from './VideoQualityDto';
@@ -13,6 +14,7 @@ export type MetadataDto = {
     resolutions: Array<ResolutionDto>;
     videoQualities: Array<VideoQualityDto>;
     languages: Array<LanguageDto>;
+    sourceTypes: Array<SourceTypeDto>;
     trackers: Array<TrackerMetaDto>;
     endpoint: string;
 };

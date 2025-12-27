@@ -4,6 +4,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { LANGUAGE_OPTIONS } from 'src/common/constant/language.constant';
 import { RESOLUTION_OPTIONS } from 'src/common/constant/resolution.constant';
+import { SOURCE_TYPE_OPTIONS } from 'src/common/constant/source-type.constant';
 import { USER_ROLE_OPTIONS } from 'src/common/constant/user-role.constant';
 import { VIDEO_QUALITY_OPTIONS } from 'src/common/constant/video-quality.constant';
 import { SettingsStore } from 'src/settings/core/settings.store';
@@ -29,6 +30,7 @@ export class MetadataController {
       userRoles: USER_ROLE_OPTIONS,
       resolutions: RESOLUTION_OPTIONS,
       videoQualities: VIDEO_QUALITY_OPTIONS,
+      sourceTypes: SOURCE_TYPE_OPTIONS,
       languages: LANGUAGE_OPTIONS,
       trackers: TRACKER_OPTIONS,
       endpoint,

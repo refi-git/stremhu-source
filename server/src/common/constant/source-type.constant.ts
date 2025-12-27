@@ -3,11 +3,15 @@ import { SourceTypeEnum } from 'src/stremio/streams/enum/source-type.enum';
 import { SourceTypeOption } from '../type/source-type-option.type';
 
 export const SOURCE_TYPE_OPTIONS: SourceTypeOption[] = [
-  { value: SourceTypeEnum.REMUX, label: 'BluRay (Remux)' },
-  { value: SourceTypeEnum.WEB_DL, label: 'Streaming (WEB-DL)' },
-  { value: SourceTypeEnum.RIP, label: 'Tömörített (*Rip)' },
-  { value: SourceTypeEnum.HDTV, label: 'TV-ből (HDTV)' },
-  { value: SourceTypeEnum.CAM, label: 'Mozis (CAM, TS, TC)' },
+  {
+    value: SourceTypeEnum.DISC_REMUX,
+    label: 'Lemez (Remux - eredeti minőség)',
+  },
+  { value: SourceTypeEnum.DISC_RIP, label: 'Lemez (Rip / újrakódolt)' },
+  { value: SourceTypeEnum.WEB_DL, label: 'Streaming (WEB-DL - eredeti)' },
+  { value: SourceTypeEnum.WEB_RIP, label: 'Streaming (WEBRip - újrakódolt)' },
+  { value: SourceTypeEnum.BROADCAST, label: 'TV (HDTV / közvetített)' },
+  { value: SourceTypeEnum.THEATRICAL, label: 'Mozis felvétel (CAM/TS/TC)' },
   { value: SourceTypeEnum.UNKNOWN, label: 'Ismeretlen' },
 ];
 

@@ -22,7 +22,6 @@ import { UserDto } from 'src/users/dto/user.dto';
 import { User } from 'src/users/entity/user.entity';
 
 import { StreamDto } from './dto/stremio-stream.dto';
-import { SourceTypeEnum } from './enum/source-type.enum';
 import { VideoQualityEnum } from './enum/video-quality.enum';
 import { ParsedStreamIdSeries } from './pipe/stream-id.pipe';
 import { FindStreams } from './type/find-streams.type';
@@ -100,8 +99,6 @@ export class StreamsService {
     user: UserDto,
     endpoint: string,
   ): StreamDto {
-    console.log('Source Type', videoFile.sourceType);
-
     const videoQualities = videoFile.videoQualities.filter(
       (videoQuality) => videoQuality !== VideoQualityEnum.SDR,
     );
@@ -233,12 +230,14 @@ export class StreamsService {
       torrentLanguages,
       torrentResolutions,
       torrentVideoQualities,
+      torrentSourceTypes,
       torrentSeed,
     } = user;
 
+    const languageSelectors = buildSelectors(torrentLanguages);
     const resolutionSelectors = buildSelectors(torrentResolutions);
     const videoQualitySelectors = buildSelectors(torrentVideoQualities);
-    const languageSelectors = buildSelectors(torrentLanguages);
+    const sourceTypeSelectors = buildSelectors(torrentSourceTypes);
 
     const filteredVideoFiles = videoFiles.filter((videoFile) => {
       let isSeedSet = true;
@@ -253,7 +252,8 @@ export class StreamsService {
         languageSelectors.filterToAllowed(videoFile.language) &&
         videoFile.videoQualities.some((videoQuality) =>
           videoQualitySelectors.filterToAllowed(videoQuality),
-        )
+        ) &&
+        sourceTypeSelectors.filterToAllowed(videoFile.sourceType)
       );
     });
 
@@ -261,20 +261,17 @@ export class StreamsService {
   }
 
   private sortVideoFiles(videoFiles: VideoFile[], user: User): VideoFile[] {
-    const { torrentLanguages, torrentResolutions, torrentVideoQualities } =
-      user;
+    const {
+      torrentLanguages,
+      torrentResolutions,
+      torrentVideoQualities,
+      torrentSourceTypes,
+    } = user;
 
     const languageSelectors = buildSelectors(torrentLanguages);
     const resolutionSelectors = buildSelectors(torrentResolutions);
     const videoQualitySelectors = buildSelectors(torrentVideoQualities);
-    const sourceTypeSelectors = buildSelectors([
-      SourceTypeEnum.REMUX,
-      SourceTypeEnum.WEB_DL,
-      SourceTypeEnum.RIP,
-      SourceTypeEnum.HDTV,
-      SourceTypeEnum.CAM,
-      SourceTypeEnum.UNKNOWN,
-    ]);
+    const sourceTypeSelectors = buildSelectors(torrentSourceTypes);
 
     const sortedVideoFiles = orderBy(
       videoFiles,

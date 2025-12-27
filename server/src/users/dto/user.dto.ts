@@ -14,6 +14,7 @@ import {
 
 import { LanguageEnum } from 'src/common/enum/language.enum';
 import { IsNullable } from 'src/common/validators/is-nullable';
+import { SourceTypeEnum } from 'src/stremio/streams/enum/source-type.enum';
 import { VideoQualityEnum } from 'src/stremio/streams/enum/video-quality.enum';
 
 import { UserRoleEnum } from '../enum/user-role.enum';
@@ -55,6 +56,16 @@ export class UserDto {
     isArray: true,
   })
   torrentVideoQualities: VideoQualityEnum[];
+
+  @IsArray()
+  @ArrayUnique()
+  @IsEnum(SourceTypeEnum, { each: true })
+  @ApiProperty({
+    enum: SourceTypeEnum,
+    enumName: 'SourceTypeEnum',
+    isArray: true,
+  })
+  torrentSourceTypes: SourceTypeEnum[];
 
   @IsArray()
   @ArrayUnique()
