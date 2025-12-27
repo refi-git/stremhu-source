@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { EntityManager } from 'typeorm';
 
 import { CatalogService } from 'src/catalog/catalog.service';
-import { GLOBAL_ID } from 'src/common/common.constant';
+import { GLOBAL_ID } from 'src/common/constant/common.constant';
 import { LocalIpService } from 'src/local-ip/local-ip.service';
 import { TorrentsService } from 'src/torrents/torrents.service';
 

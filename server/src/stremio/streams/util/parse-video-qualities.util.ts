@@ -8,38 +8,40 @@ type HdrType =
 
 const HDR_PATTERNS: Record<HdrType, string[]> = {
   [VideoQualityEnum.DV]: [
-    '.Dolby.Vision.',
-    '.DoVi.',
-    '.DoVi-',
-    '-DoVi.',
-    '.DV.',
+    '.dolby.vision.',
+    '.dovi.',
+    '.dovi-',
+    '-dovi.',
+    '.dv.',
   ],
   [VideoQualityEnum.HDR10]: [
-    '.HDR.',
-    '-HDR.',
-    '.HDR-',
-    '.HDR10.',
-    '-HDR10.',
-    '.HDR10-',
+    '.hdr.',
+    '-hdr.',
+    '.hdr-',
+    '.hdr10.',
+    '-hdr10.',
+    '.hdr10-',
   ],
   [VideoQualityEnum.HDR10P]: [
-    '.HDR10Plus.',
-    '-HDR10Plus.',
-    '.HDR10Plus-',
-    '.HDR10+.',
-    '-HDR10+.',
-    '.HDR10+-',
-    '.HDR10P.',
-    '-HDR10P.',
-    '.HDR10P-',
+    '.hdr10plus.',
+    '-hdr10plus.',
+    '.hdr10plus-',
+    '.hdr10+.',
+    '-hdr10+.',
+    '.hdr10+-',
+    '.hdr10p.',
+    '-hdr10p.',
+    '.hdr10p-',
   ],
-  [VideoQualityEnum.HLG]: ['.HLG.'],
+  [VideoQualityEnum.HLG]: ['.hlg.'],
 };
 
 export function parseVideoQualities(torrentName: string): VideoQualityEnum[] {
+  const normalizedTorrentName = torrentName.toLocaleLowerCase();
+
   const videoQualities = Object.entries(HDR_PATTERNS)
     .filter(([, patterns]) =>
-      patterns.some((pattern) => torrentName.includes(pattern)),
+      patterns.some((pattern) => normalizedTorrentName.includes(pattern)),
     )
     .map(([type]) => type as VideoQualityEnum);
 

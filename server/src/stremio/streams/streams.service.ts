@@ -6,11 +6,9 @@ import { Injectable } from '@nestjs/common';
 import { compact, orderBy } from 'lodash';
 
 import { CatalogService } from 'src/catalog/catalog.service';
-import {
-  LANGUAGE_LABEL_MAP,
-  RESOLUTION_LABEL_MAP,
-  VIDEO_QUALITY_LABEL_MAP,
-} from 'src/common/common.constant';
+import { LANGUAGE_LABEL_MAP } from 'src/common/constant/language.constant';
+import { RESOLUTION_LABEL_MAP } from 'src/common/constant/resolution.constant';
+import { VIDEO_QUALITY_LABEL_MAP } from 'src/common/constant/video-quality.constant';
 import { formatFilesize } from 'src/common/utils/file.util';
 import { SettingsStore } from 'src/settings/core/settings.store';
 import { TrackerTorrentStatusEnum } from 'src/trackers/enum/tracker-torrent-status.enum';
@@ -24,6 +22,7 @@ import { UserDto } from 'src/users/dto/user.dto';
 import { User } from 'src/users/entity/user.entity';
 
 import { StreamDto } from './dto/stremio-stream.dto';
+import { SourceTypeEnum } from './enum/source-type.enum';
 import { VideoQualityEnum } from './enum/video-quality.enum';
 import { ParsedStreamIdSeries } from './pipe/stream-id.pipe';
 import { FindStreams } from './type/find-streams.type';
@@ -31,6 +30,7 @@ import { VideoFile } from './type/video-file.type';
 import { buildSelectors } from './util/build-selectors';
 import { findVideoFile } from './util/find-video-file.util';
 import { isNotWebReady } from './util/is-not-web-ready.util';
+import { parseSourceType } from './util/parse-source-type.util';
 import { parseVideoQualities } from './util/parse-video-qualities.util';
 
 @Injectable()
@@ -100,6 +100,8 @@ export class StreamsService {
     user: UserDto,
     endpoint: string,
   ): StreamDto {
+    console.log('Source Type', videoFile.sourceType);
+
     const videoQualities = videoFile.videoQualities.filter(
       (videoQuality) => videoQuality !== VideoQualityEnum.SDR,
     );
@@ -215,6 +217,7 @@ export class StreamsService {
         audioCodec,
         videoCodec,
         videoQualities: parseVideoQualities(torrentName),
+        sourceType: parseSourceType(torrentName),
         sources,
         notWebReady: isNotWebReady(videoCodec, audioCodec),
       };
@@ -264,6 +267,14 @@ export class StreamsService {
     const languageSelectors = buildSelectors(torrentLanguages);
     const resolutionSelectors = buildSelectors(torrentResolutions);
     const videoQualitySelectors = buildSelectors(torrentVideoQualities);
+    const sourceTypeSelectors = buildSelectors([
+      SourceTypeEnum.REMUX,
+      SourceTypeEnum.WEB_DL,
+      SourceTypeEnum.RIP,
+      SourceTypeEnum.HDTV,
+      SourceTypeEnum.CAM,
+      SourceTypeEnum.UNKNOWN,
+    ]);
 
     const sortedVideoFiles = orderBy(
       videoFiles,
@@ -279,9 +290,10 @@ export class StreamsService {
 
           return bestQualityRank;
         },
+        (videoFile) => sourceTypeSelectors.priorityIndex(videoFile.sourceType),
         (videoFile) => videoFile.seeders,
       ],
-      ['asc', 'asc', 'asc', 'desc'],
+      ['asc', 'asc', 'asc', 'asc', 'desc'],
     );
 
     return sortedVideoFiles;
