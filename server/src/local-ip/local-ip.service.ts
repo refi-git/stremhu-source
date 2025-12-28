@@ -2,6 +2,7 @@ import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 import axios from 'axios';
+import axiosRetry, { exponentialDelay } from 'axios-retry';
 import * as https from 'node:https';
 import { z } from 'zod';
 
@@ -27,7 +28,9 @@ export class LocalIpService implements OnApplicationBootstrap {
     private readonly configService: ConfigService,
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly settingsStore: SettingsStore,
-  ) {}
+  ) {
+    axiosRetry(axios, { retries: 2, retryDelay: exponentialDelay });
+  }
 
   private httpsServer: https.Server | null = null;
 
@@ -102,6 +105,7 @@ export class LocalIpService implements OnApplicationBootstrap {
 
   private async fetchKeys(): Promise<LocalIp> {
     const { data } = await axios.get<unknown>(LOCAL_IP_KEYS_URL);
+
     const localIp = localIpSchema.parse(data);
     return localIp;
   }
