@@ -84,6 +84,7 @@ export class LibtorrentStreamService {
           start: currentByte,
           end: prioritizeAndWait.available_end_byte,
         });
+
         for await (const chunk of chunks) {
           yield chunk;
         }
