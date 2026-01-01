@@ -92,7 +92,7 @@ export class PlaybackController {
       return res.end();
     }
 
-    const stream = file.createReadStream({ start, end });
+    const stream = await file.createReadStream({ start, end });
 
     pipeline(stream, res, (err) => {
       if (!err) return;

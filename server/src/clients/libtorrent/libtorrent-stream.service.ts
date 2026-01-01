@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 import { createReadStream as fsCreateReadStream } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
@@ -30,22 +31,8 @@ export class LibtorrentStreamService {
   }
 
   async *streamIterator(payload: CreateReadStream) {
-    const { infoHash, fileIndex, start, end } = payload;
-
-    if (start > end) {
-      throw new Error(`A "start" nem lehet nagyobb, mint az "end".`);
-    }
-
-    const file = await this.libtorrentClient.torrents.getTorrentFile(
-      infoHash,
-      fileIndex,
-    );
-
-    if (start >= file.size) {
-      throw new Error(
-        `A "start" nem lehet nagyobb vagy egyenlő, mint a "file.size".`,
-      );
-    }
+    const { infoHash, fileIndex, start, end, file } = payload;
+    const stremId = randomUUID();
 
     const fileEnd = file.size - 1;
     const safeEnd = Math.min(end, fileEnd);
@@ -75,6 +62,7 @@ export class LibtorrentStreamService {
           await this.libtorrentClient.torrents.prioritizeAndWait(
             infoHash,
             fileIndex,
+            stremId,
             {
               start_byte: currentByte,
             },
@@ -93,7 +81,10 @@ export class LibtorrentStreamService {
       }
     } finally {
       streamClosed = true;
-      await this.libtorrentClient.torrents.resetPiecesPriorities(infoHash);
+      await this.libtorrentClient.torrents.resetPiecesPriorities(
+        infoHash,
+        stremId,
+      );
     }
   }
 }

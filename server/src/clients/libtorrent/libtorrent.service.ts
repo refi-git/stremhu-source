@@ -1,4 +1,9 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
@@ -192,13 +197,32 @@ export class LibtorrentService implements TorrentClient {
       fileIndex: torrentFile.file_index,
       name: torrentFile.path,
       total: torrentFile.size,
-      createReadStream: (ops) =>
-        this.libtorrentStreamService.createReadStream({
+      createReadStream: async (ops) => {
+        const file = await this.libtorrentClient.torrents.getTorrentFile(
+          infoHash,
+          fileIndex,
+        );
+
+        if (ops.start > ops.end) {
+          throw new BadRequestException(
+            `A "start" nem lehet nagyobb, mint az "end".`,
+          );
+        }
+
+        if (ops.start >= file.size) {
+          throw new BadRequestException(
+            `A "start" nem lehet nagyobb vagy egyenlő, mint a "file.size".`,
+          );
+        }
+
+        return this.libtorrentStreamService.createReadStream({
           infoHash,
           fileIndex,
           start: ops.start,
           end: ops.end,
-        }),
+          file: file,
+        });
+      },
     };
   }
 

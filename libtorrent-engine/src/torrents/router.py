@@ -71,11 +71,17 @@ def get_torrent_file(
 )
 def prioritize_and_wait(
     info_hash: str,
+    stream_id: str,
     file_index: int,
     req: PrioritizeAndWaitRequest,
 ):
     parsed_info_hash = torrents_service.parse_info_hash(info_hash)
-    return torrents_service.prioritize_and_wait(parsed_info_hash, file_index, req)
+    return torrents_service.prioritize_and_wait(
+        parsed_info_hash,
+        stream_id,
+        file_index,
+        req,
+    )
 
 
 @router.post(
@@ -84,9 +90,13 @@ def prioritize_and_wait(
 )
 def reset_pieces_priorities(
     info_hash: str,
+    stream_id: str,
 ):
     parsed_info_hash = torrents_service.parse_info_hash(info_hash)
-    torrents_service.reset_pieces_priorities(parsed_info_hash)
+    torrents_service.reset_pieces_priorities(
+        parsed_info_hash,
+        stream_id,
+    )
 
 
 @router.delete(

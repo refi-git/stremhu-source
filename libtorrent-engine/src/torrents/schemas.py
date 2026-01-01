@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -53,7 +53,11 @@ class RemoveTorrent(BaseModel):
     deleteFiles: bool = False
 
 
-class PieceWindow(NamedTuple):
+class StreamPiece(BaseModel):
     start_piece_index: int
     end_piece_index: int
-    priorities: List[int]
+
+
+class TorrentStatus(BaseModel):
+    stream_pieces: Dict[str, StreamPiece] = {}
+    default_priorities: List[int]

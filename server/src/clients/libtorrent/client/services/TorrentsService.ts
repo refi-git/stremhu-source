@@ -109,6 +109,7 @@ export class TorrentsService {
      * Prioritize And Wait
      * @param infoHash
      * @param fileIndex
+     * @param streamId
      * @param requestBody
      * @returns PrioritizeAndWait Successful Response
      * @throws ApiError
@@ -116,6 +117,7 @@ export class TorrentsService {
     public prioritizeAndWait(
         infoHash: string,
         fileIndex: number,
+        streamId: string,
         requestBody: PrioritizeAndWaitRequest,
     ): CancelablePromise<PrioritizeAndWait> {
         return this.httpRequest.request({
@@ -124,6 +126,9 @@ export class TorrentsService {
             path: {
                 'info_hash': infoHash,
                 'file_index': fileIndex,
+            },
+            query: {
+                'stream_id': streamId,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -135,17 +140,22 @@ export class TorrentsService {
     /**
      * Reset Pieces Priorities
      * @param infoHash
+     * @param streamId
      * @returns any Successful Response
      * @throws ApiError
      */
     public resetPiecesPriorities(
         infoHash: string,
+        streamId: string,
     ): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/torrents/{info_hash}/files/{file_index}/pieces/priorities/reset',
             path: {
                 'info_hash': infoHash,
+            },
+            query: {
+                'stream_id': streamId,
             },
             errors: {
                 422: `Validation Error`,

@@ -31,7 +31,7 @@ export type ClientTorrentFile = {
   fileIndex: number;
   name: string;
   total: number;
-  createReadStream: (ops: TorrentFileOps) => Readable;
+  createReadStream: (ops: TorrentFileOps) => Promise<Readable> | Readable;
 };
 
 export interface TorrentClient {
