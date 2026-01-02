@@ -2,19 +2,22 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { Torrent } from 'webtorrent';
 
 import { SettingsStore } from 'src/settings/core/settings.store';
 import {
+  ClientTorrent,
+  ClientTorrentFile,
   TorrentClient,
   TorrentClientToAddTorrent,
   TorrentClientToUpdateConfig,
 } from 'src/torrents/ports/torrent-client.port';
-
-import type { WebTorrentTorrent } from './webtorrent.types';
 
 @Injectable()
 export class WebTorrentService implements TorrentClient {
@@ -30,20 +33,18 @@ export class WebTorrentService implements TorrentClient {
     private readonly settingsStore: SettingsStore,
   ) {
     this.downloadsDir = this.configService.getOrThrow<string>(
-      'web-torrent.downloads-dir',
+      'torrent.downloads-dir',
     );
     this.storeCacheSlots = this.configService.getOrThrow<number>(
-      'web-torrent.store-cache-slots',
+      'torrent.store-cache-slots',
     );
   }
 
   async bootstrap() {
     const setting = await this.settingsStore.findOneOrThrow();
-    const torrentPort =
-      this.configService.getOrThrow<number>('web-torrent.port');
-    const maxConns = this.configService.getOrThrow<number>(
-      'web-torrent.peer-limit',
-    );
+    const torrentPort = this.configService.getOrThrow<number>('torrent.port');
+    const maxConns =
+      this.configService.getOrThrow<number>('torrent.peer-limit');
 
     const { default: WebTorrent } = await import('webtorrent');
 
@@ -83,13 +84,15 @@ export class WebTorrentService implements TorrentClient {
     webtorrent.throttleUpload(payload.uploadLimit);
   }
 
-  getTorrents(): WebTorrentTorrent[] {
+  getTorrents(): ClientTorrent[] {
     const webtorrent = this.getClient();
 
-    return webtorrent.torrents;
+    return webtorrent.torrents.map((torrent) =>
+      this.buildClientTorrent(torrent),
+    );
   }
 
-  async getTorrent(infoHash: string): Promise<WebTorrentTorrent | null> {
+  async getTorrent(infoHash: string): Promise<ClientTorrent | null> {
     const webtorrent = this.getClient();
 
     const torrent = await webtorrent.get(infoHash);
@@ -98,17 +101,17 @@ export class WebTorrentService implements TorrentClient {
       return null;
     }
 
-    return torrent;
+    return this.buildClientTorrent(torrent);
   }
 
-  addTorrent(payload: TorrentClientToAddTorrent): Promise<WebTorrentTorrent> {
+  addTorrent(payload: TorrentClientToAddTorrent): Promise<ClientTorrent> {
     const webtorrent = this.getClient();
 
     return new Promise((resolve, reject) => {
-      const { parsedTorrent, downloadFullTorrent = false } = payload;
+      const { torrentFilePath, downloadFullTorrent = false } = payload;
 
       const torrent = webtorrent.add(
-        parsedTorrent,
+        torrentFilePath,
         {
           path: this.downloadsDir,
           storeCacheSlots: this.storeCacheSlots,
@@ -119,7 +122,7 @@ export class WebTorrentService implements TorrentClient {
             `🎬 "${torrent.name}" nevű torrent hozzáadva a WebTorrent-hez.`,
           );
 
-          resolve(torrent);
+          resolve(this.buildClientTorrent(torrent));
         },
       );
 
@@ -127,21 +130,52 @@ export class WebTorrentService implements TorrentClient {
     });
   }
 
-  async deleteTorrent(
-    webTorrentTorrent: WebTorrentTorrent,
-  ): Promise<WebTorrentTorrent> {
+  async deleteTorrent(infoHash: string): Promise<ClientTorrent> {
     const webtorrent = this.getClient();
 
-    await webtorrent.remove(webTorrentTorrent.infoHash, { destroyStore: true });
+    const torrent = await webtorrent.get(infoHash);
 
-    const torrentPath = join(webTorrentTorrent.path, webTorrentTorrent.name);
+    if (!torrent) {
+      throw new NotFoundException(`A(z) "${infoHash}" torrent nem létezik.`);
+    }
+
+    await webtorrent.remove(torrent.infoHash, { destroyStore: true });
+
+    const torrentPath = join(torrent.path, torrent.name);
     await rm(torrentPath, { recursive: true, force: true });
 
     this.logger.log(
-      `🗑️ "${webTorrentTorrent.name}" nevű torrent törölve a WebTorrent-ből.`,
+      `🗑️ "${torrent.name}" nevű torrent törölve a WebTorrent-ből.`,
     );
 
-    return webTorrentTorrent;
+    return this.buildClientTorrent(torrent);
+  }
+
+  async getTorrentFile(
+    infoHash: string,
+    fileIndex: number,
+  ): Promise<ClientTorrentFile> {
+    const webtorrent = this.getClient();
+
+    const torrent = await webtorrent.get(infoHash);
+
+    if (!torrent) {
+      throw new NotFoundException();
+    }
+
+    const torrentFile = torrent.files[fileIndex];
+
+    if (!torrentFile) {
+      throw new NotFoundException();
+    }
+
+    return {
+      infoHash: torrent.infoHash,
+      fileIndex: fileIndex,
+      name: torrentFile.name,
+      total: torrentFile.length,
+      createReadStream: (ops) => torrentFile.createReadStream(ops) as Readable,
+    };
   }
 
   private getClient() {
@@ -150,5 +184,18 @@ export class WebTorrentService implements TorrentClient {
     }
 
     return this.client;
+  }
+
+  private buildClientTorrent(payload: Torrent): ClientTorrent {
+    return {
+      infoHash: payload.infoHash,
+      name: payload.name,
+      downloadSpeed: payload.downloadSpeed,
+      downloaded: payload.downloaded,
+      uploadSpeed: payload.uploadSpeed,
+      uploaded: payload.uploaded,
+      progress: payload.progress,
+      total: payload.length,
+    };
   }
 }
