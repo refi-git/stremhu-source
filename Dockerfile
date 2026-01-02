@@ -3,6 +3,7 @@ FROM ubuntu:24.04 AS base
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates python3 python3-pip python3-venv python-is-python3 \
+    && update-ca-certificates \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
@@ -63,6 +64,8 @@ WORKDIR /app/server
 ENV NODE_ENV=production
 ENV PYTHONPATH=/app/libtorrent-engine/src
 ENV PATH="/opt/venv/bin:${PATH}"
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_DIR=/etc/ssl/certs
 
 EXPOSE 3000/tcp
 EXPOSE 3443/tcp
