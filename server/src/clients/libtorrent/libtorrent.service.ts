@@ -64,7 +64,7 @@ export class LibtorrentService implements TorrentClient {
       args.push('-m', 'debugpy', '--listen', `0.0.0.0:5678`);
     }
 
-    const logConfig = !idDevEnv ? '../logging.dev.ini' : '../logging.prod.ini';
+    const logConfig = idDevEnv ? '../logging.dev.ini' : '../logging.prod.ini';
 
     args.push(
       '-m',
