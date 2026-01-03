@@ -45,8 +45,8 @@ services:
 | `HTTP_PORT`                     | Ezen a porton fog elindulni a szerver.                                                                                                             |          3000           |
 | `HTTPS_PORT`                    | Ezen a porton fut a HTTPS szerver, amennyiben a beállításoknál a `Hozzáférés otthoni hálózaton` van beállítva.                                     |          3443           |
 | `SESSION_SECRET`                | Session titkosításának beállítása.                                                                                                                 |     stremhu-source      |
-| `TORRENT_CLIENT`                | Beállítja, hogy a libtorrent vagy a WebTorrent legyen használva                                                                                    |       web-torrent       |
-| `TORRENT_PORT`                  | Torrent kliens ezt a portot használja a seedelésre                                                                                                 |          6881           |
+| `TORRENT_CLIENT`                | Beállítja, hogy a libtorrent vagy WebTorrent legyen használva.Lehetséges értékek: `libtorrent`, `web-torrent`.                                     |       libtorrent        |
+| `TORRENT_PORT`                  | A torrent kliens bejövő peer/seeding portja.                                                                                                       |          6881           |
 | `TORRENT_PEER_LIMIT`            | Torrent kliens peer limit beállítása, torrentenként értendő. Minnél több peer-re csatlakozik annál magasabb a RAM és CPU terhelés.                 |           20            |
 | `WEB_TORRENT_STORE_CACHE_SLOTS` | Web Torrent hány darab chunk-ot tart memóriában, minnél magasabb annál kevesebb lemez-I/O, gyorsabb hozzáférés, de több RAM-ot használ a rendszer. |           10            |
 | `NCORE_URL`                     | nCore weboldal URL módósítása esetén van lehetőség a módosításra.                                                                                  |    https://ncore.pro    |

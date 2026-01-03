@@ -52,7 +52,7 @@ export class SettingsService implements OnModuleInit {
       (downloadLimit && setting.downloadLimit !== downloadLimit) ||
       (uploadLimit && uploadLimit !== setting.uploadLimit)
     ) {
-      this.torrentsService.updateTorrentClient({
+      await this.torrentsService.updateTorrentClient({
         downloadLimit: downloadLimit || setting.downloadLimit,
         uploadLimit: uploadLimit || setting.uploadLimit,
       });
@@ -83,10 +83,10 @@ export class SettingsService implements OnModuleInit {
 
     await this.settingsStore.create({
       id: GLOBAL_ID,
-      hitAndRun: false,
+      hitAndRun: true,
       enebledlocalIp: true,
-      downloadLimit: 12_500_000,
-      uploadLimit: 12_500_000,
+      downloadLimit: -1,
+      uploadLimit: -1,
       keepSeedSeconds: null,
       cacheRetentionSeconds: 14 * 24 * 60 * 60,
     });

@@ -29,6 +29,9 @@ export class LibtorrentService implements TorrentClient {
 
   private readonly downloadsDir: string;
   private libtorrentEngineProcess: ReturnType<typeof spawn> | null = null;
+  private isShuttingDown = false;
+  private isRestarting = false;
+  private readonly restartDelayMs = 1000;
 
   constructor(
     @Inject(LIBTORRENT_CLIENT)
@@ -44,6 +47,8 @@ export class LibtorrentService implements TorrentClient {
 
   async bootstrap() {
     if (this.libtorrentEngineProcess) return;
+
+    this.isShuttingDown = false;
 
     const port = this.configService.getOrThrow<number>('torrent.port');
     const peerLimit =
@@ -86,20 +91,31 @@ export class LibtorrentService implements TorrentClient {
     });
 
     this.libtorrentEngineProcess.stdout?.on('data', (data: Buffer) => {
-      this.logger.log(`[libtorrent engine] ${data.toString().trimEnd()}`);
+      this.logger.log(`[libtorrent] ${data.toString().trimEnd()}`);
     });
 
     this.libtorrentEngineProcess.stderr?.on('data', (data: Buffer) => {
-      this.logger.error(`[libtorrent engine] ${data.toString().trimEnd()}`);
+      this.logger.error(`[libtorrent] ${data.toString().trimEnd()}`);
     });
 
     this.libtorrentEngineProcess.on('error', (err) => {
-      this.logger.error(`spawn failed: ${err.message}`);
+      this.logger.error(`[libtorrent] Nem sikerült elindítani: ${err.message}`);
     });
 
     this.libtorrentEngineProcess.on('exit', (code, signal) => {
-      this.logger.warn(`FastAPI leállt. code=${code} signal=${signal}`);
+      this.logger.warn(
+        `[libtorrent] FastAPI leállt. code=${code} signal=${signal}`,
+      );
       this.libtorrentEngineProcess = null;
+
+      if (this.isShuttingDown) return;
+
+      const isErrorExit = (code !== null && code !== 0) || signal !== null;
+
+      if (!isErrorExit || this.isRestarting) return;
+
+      this.isRestarting = true;
+      void this.restartEngine();
     });
 
     let started = false;
@@ -126,6 +142,7 @@ export class LibtorrentService implements TorrentClient {
   async shutdown() {
     if (!this.libtorrentEngineProcess) return;
 
+    this.isShuttingDown = true;
     this.libtorrentEngineProcess.kill();
     this.libtorrentEngineProcess = null;
 
@@ -186,7 +203,7 @@ export class LibtorrentService implements TorrentClient {
           `⏳ A(z) "${torrent.name}" torrent ellenörzés alatt van: ${progress.toPrecision(2)}%`,
         );
       }
-      await setTimeout(1000);
+      await setTimeout(2000);
     }
 
     this.logger.log(
@@ -248,6 +265,20 @@ export class LibtorrentService implements TorrentClient {
         });
       },
     };
+  }
+
+  private async restartEngine() {
+    this.logger.warn(
+      `[libtorrent] Újrainditas hiba miatt ${this.restartDelayMs}ms múlva.`,
+    );
+
+    await setTimeout(this.restartDelayMs);
+
+    try {
+      await this.bootstrap();
+    } finally {
+      this.isRestarting = false;
+    }
   }
 
   private buildClientTorrent(payload: Torrent): ClientTorrent {

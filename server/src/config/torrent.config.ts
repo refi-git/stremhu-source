@@ -22,7 +22,7 @@ export default registerAs('torrent', () => {
 
   const configs: ZodConfig<TorrentConfig> = {
     client: {
-      value: process.env.TORRENT_CLIENT ?? TorrentClientEnum.WEB_TORRENT,
+      value: process.env.TORRENT_CLIENT ?? TorrentClientEnum.LIBTORRENT,
       zod: z.enum(TorrentClientEnum),
     },
     port: {
