@@ -29,8 +29,10 @@ function RouteComponent() {
         </div>
         <Alert className="text-orange-400 *:data-[slot=alert-description]:text-orange-400 ">
           <TriangleAlertIcon />
-          <AlertTitle className="line-clamp-2">
-            200 Mbit/s felett a kliens jelentősen terhelheti a processzort.
+          <AlertTitle className="line-clamp-3">
+            A zavartalan letöltéshez feltöltésre is szükség van. Állítsd a
+            feltöltési limitet legalább a kívánt letöltési sebesség 10%-ára,
+            hogy ne fogja vissza a letöltést.
           </AlertTitle>
         </Alert>
       </div>
